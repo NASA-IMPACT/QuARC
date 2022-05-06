@@ -1,0 +1,4 @@
+aws-cdk.aws-apigateway
+aws-cdk.aws-lambda-python
+aws-cdk-lib
+constructs
