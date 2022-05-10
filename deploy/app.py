@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-import aws_cdk as cdk
+from aws_cdk import core
 
 from deploy.deploy_stack import DeployStack
 
 
-app = cdk.App()
+app = core.App()
 DeployStack(app, "DeployStack",
-    )
+)
 
 app.synth()
