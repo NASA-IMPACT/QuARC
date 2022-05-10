@@ -24,7 +24,6 @@ class DeployStack(core.Stack):
             layers=[pyQuARC_layer]
         )
 
-        # TODO: Give permission to invoke the lambda function
         api = apigateway.LambdaRestApi(self, "pyQuARCAPI",
             handler=pyQuARC_runner,
             default_cors_preflight_options=apigateway.CorsOptions(
