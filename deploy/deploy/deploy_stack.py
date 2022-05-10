@@ -13,12 +13,12 @@ class DeployStack(core.Stack):
         pyQuARC_layer = lambda_.LayerVersion(self, "pyQuARCLayer",
             code=lambda_.Code.from_asset("../layers/pyQuARC/"),
             compatible_architectures=[lambda_.Architecture.X86_64, lambda_.Architecture.ARM_64],
-            compatible_runtimes=[lambda_.Runtime.PYTHON_3_9],
+            compatible_runtimes=[lambda_.Runtime.PYTHON_3_8],
         )
 
         pyQuARC_runner = lambda_python_.PythonFunction(self, "pyQuARCRunner",
             entry='../lambdas/runner/',
-            runtime=lambda_.Runtime.PYTHON_3_9,
+            runtime=lambda_.Runtime.PYTHON_3_8,
             index="handler.py",
             handler="handler",
             layers=[pyQuARC_layer]
@@ -26,10 +26,12 @@ class DeployStack(core.Stack):
 
         # TODO: Give permission to invoke the lambda function
         api = apigateway.LambdaRestApi(self, "pyQuARCAPI",
-            handler=pyQuARC_runner
+            handler=pyQuARC_runner,
+            default_cors_preflight_options=apigateway.CorsOptions(
+                allow_origins=apigateway.Cors.ALL_ORIGINS,
+                allow_methods=apigateway.Cors.ALL_METHODS
+            )
         )
-
-        # pyQuARC_runner.grant_invoke(api.root.role)
 
         validate = api.root.add_resource("validate")
         validate.add_method("POST")
