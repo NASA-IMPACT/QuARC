@@ -36,9 +36,10 @@ The **cloud architecture diagram** is linked here:
 The following resources are to be used:
 
 1. A lambda function to run the actual pyQuARC validation
-   1. This lambda will use a pyQuARC lambda layer to import pyQuARC
+   * This lambda will use a pyQuARC lambda layer to import pyQuARC
 2. An API gateway will act as an interface between the users and the lambda function
-   1. This will connect to the lambda function using LambdaIntegration
+   * This will connect to the lambda function using LambdaIntegration
 3. A cron job will be scheduled to run once everyday to pull in the latest pyQuARC version and update the lambda layer
+   * A manual trigger will also be set up in cases where there's a need to manually update the lambda for critical fixes
 
 All of these are specified in the architecture diagram linked above.
