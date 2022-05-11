@@ -1,0 +1,35 @@
+openapi: 3.0.1
+info:
+  title: defaultTitle
+  description: defaultDescription
+  version: '0.1'
+servers:
+  - url: https://quarc.nasa-impact.net
+paths:
+  /validate:
+    post:
+      description: Auto generated using Swagger Inspector
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                concept_id:
+                  type: string
+                format:
+                  type: string
+            examples:
+              '0':
+                value: |-
+                  {
+                      "concept_id": "C1214470488-ASF",
+                      "format": "echo10"
+                  }
+      responses:
+        default:
+          description: Auto generated using Swagger Inspector
+      servers:
+        - url: https://quarc.nasa-impact.net
+    servers:
+      - url: https://quarc.nasa-impact.net
