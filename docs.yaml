@@ -1,14 +1,14 @@
 openapi: 3.0.1
 info:
-  title: defaultTitle
-  description: defaultDescription
+  title: QuARC
+  description: Open Source Library for Earth Observation Metadata Quality Assessment
   version: '0.1'
 servers:
-  - url: https://quarc.nasa-impact.net
+  - url: https://quarc.nasa-impact.net/
 paths:
   /validate:
     post:
-      description: Auto generated using Swagger Inspector
+      description: Validate metadata
       requestBody:
         content:
           application/json:
@@ -27,9 +27,68 @@ paths:
                       "format": "echo10"
                   }
       responses:
-        default:
-          description: Auto generated using Swagger Inspector
+        '200':
+          description: Return the result of validation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    concept_id:
+                      type: string
+                    errors:
+                      type: object
+              examples:
+                '0':
+                  value: |-
+                    [
+                      {
+                        "concept_id": "C1214470488-ASF",
+                        "errors": {
+                            "LicenseURL": {
+                              "xml_schema": {
+                                "message": [
+                                  "Error: This element is not expected. Expected is one of ( Description, LicenseUrl, LicenseText )."
+                                ],
+                                "valid": false
+                              }
+                            },
+                            "Collection/InsertTime": {
+                              "datetime_format_check": {
+                                "valid": true,
+                                "value": []
+                              }
+                            },
+                            "Collection/SpatialKeywords/Keyword": {
+                              "location_keyword_presence_check": {
+                                "valid": false,
+                                "value": [
+                                  null
+                                ],
+                                "message": [
+                                  "Info: No location keyword is provided."
+                                ],
+                                "remediation": "Please add a location keyword."
+                              }
+                            },
+                            "Collection/Platforms/Platform/Type": {
+                              "platform_type_gcmd_check": {
+                                "valid": false,
+                                "value": [
+                                  "Spacecraft"
+                                ],
+                                "message": [
+                                  "Error: The provided platform type `Spacecraft` does not comply with the GCMD."
+                                ],
+                                "remediation": "Please submit a request to support@earthdata.nasa.gov to have this platform type added to the GCMD Locations KMS."
+                              }
+                            }
+                        }
+                      }
+                    ]
       servers:
-        - url: https://quarc.nasa-impact.net
+        - url: https://quarc.nasa-impact.net/
     servers:
-      - url: https://quarc.nasa-impact.net
+      - url: https://quarc.nasa-impact.net/
