@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
+
+from config import APP_NAME, ENV
+
 from aws_cdk import core
 
-from deploy.deploy_stack import DeployStack
+from deploy.stack import AppStack
 
 
 app = core.App()
-DeployStack(app, "DeployStack",
+AppStack(app, f"{APP_NAME}-{ENV}",
 )
 
 app.synth()
