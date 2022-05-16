@@ -1,5 +1,6 @@
 from pyQuARC import ARC
 import json
+from requests_toolbelt.multipart import decoder
 
 
 def handler(event, context):

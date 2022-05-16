@@ -44,6 +44,7 @@ class AppStack(core.Stack):
                 stage_name=config.ENV,
             ),
             rest_api_name=f"{construct_id}-api",
+            binary_media_types=["*/*"],
         )
 
         validate = api.root.add_resource("validate")
