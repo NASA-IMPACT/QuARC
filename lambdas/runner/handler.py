@@ -5,7 +5,7 @@ import json
 def handler(event, context):
     request_body = json.loads(event.get("body", "{}"))
 
-    response = {
+    RESPONSE = {
         "isBase64Encoded": False,
         "statusCode": 200,
         "headers": {},
@@ -17,12 +17,11 @@ def handler(event, context):
             metadata_format=request_body.get('format', 'echo10'),
         )
         results = arc.validate()
-        response['body'] = json.dumps(results)
+        RESPONSE['body'] = json.dumps(results)
     except Exception as e:
-        response['statusCode'] = 500
-        response['body'] = str(e)
-    return response
-        
+        RESPONSE['statusCode'] = 500
+        RESPONSE['body'] = str(e)
+    return RESPONSE        
 
 
 if __name__=='__main__':
