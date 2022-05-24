@@ -1,0 +1,6 @@
+env/
+.DS_Store
+*/env/
+
+layers/
+.venv/*
