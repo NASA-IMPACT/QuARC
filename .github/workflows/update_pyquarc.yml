@@ -38,6 +38,7 @@ jobs:
 
       - name: Update pyQuARC layer if required
         run: |
+          pip install requests zipfile boto3
           python update_pyquarc.py
 
       - name: CDK deploy if required
