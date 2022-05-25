@@ -1,6 +1,9 @@
 name: Deploy QuARC
 
 on:
+  push:
+    branches:
+      - feature/auto_update_quarc
   schedule:
     - cron: '0 1 * * *'
   workflow_dispatch:
