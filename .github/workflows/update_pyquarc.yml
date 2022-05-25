@@ -1,4 +1,4 @@
-name: Deploy QuARC
+name: Update pyQuARC version and deploy
 
 on:
   schedule:
@@ -28,7 +28,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: setup python
+      - name: Setup python
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
@@ -37,7 +37,7 @@ jobs:
         run: |
           python update_pyquarc.py
 
-      - name: CDK deploy
+      - name: CDK deploy if required
         if: "${{ env.NEEDS_DEPLOYMENT == 'true' }}"
         uses: youyo/aws-cdk-github-actions@v2
         with:
