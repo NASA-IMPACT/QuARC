@@ -5,7 +5,7 @@ on:
     branches:
       - feature/auto_update_quarc
   schedule:
-    - cron: '0 1 * * *'
+    - cron: '0 0 * * *' # Run everyday at midnight
   workflow_dispatch:
 
 jobs:
@@ -53,6 +53,3 @@ jobs:
       - name: Update SSM Param to new version tag
         if: steps.cdkdeploy.outcome == 'success'
         run: python helpers/write_ssm.py ${{ env.NEW_VERSION }}
-
-      - name: Update swagger docs
-        run: aws s3 sync . s3://${{ secrets.BUCKET_NAME }}/docs/ --exclude="*" --include="docs.yaml" 
