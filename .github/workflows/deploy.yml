@@ -1,0 +1,61 @@
+name: Deploy pyQuARC with the latest pyQuARC version
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+      - feature/auto_update_quarc
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set environment based on branch
+        run: |
+          if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
+              echo "ENV=prod" >> "$GITHUB_ENV"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14.15.1"
+
+      - name: Install CDK
+        run: |
+          npm install -g aws-cdk
+
+      - name: Download latest pyQuARC version if needed
+        run: |
+          pip install requests boto3
+          python helpers/update_pyquarc.py
+
+      - name: Run CDK Deploy
+        run: |
+          cd deploy
+          pip install -r requirements.txt
+          cdk deploy --require-approval never
+          cd ..
+
+      - name: Update SSM Param to new version tag
+        if: steps.cdkdeploy.outcome == 'success' AND env.NEW_VERSION != ""
+        run: python helpers/write_ssm.py ${{ env.NEW_VERSION }}
+
+      - name: Update swagger docs
+        run: aws s3 sync . s3://${{ secrets.BUCKET_NAME }}/docs/ --exclude="*" --include="docs.yaml"
