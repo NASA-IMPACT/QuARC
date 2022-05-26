@@ -54,7 +54,7 @@ jobs:
           cd ..
 
       - name: Update SSM Param to new version tag
-        if: steps.cdkdeploy.outcome == 'success' AND env.NEW_VERSION != ""
+        if: steps.cdkdeploy.outcome == 'success' && env.NEW_VERSION != ""
         run: python helpers/write_ssm.py ${{ env.NEW_VERSION }}
 
       - name: Update swagger docs
