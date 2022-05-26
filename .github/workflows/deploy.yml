@@ -1,10 +1,11 @@
-name: Deploy pyQuARC with the latest pyQuARC version
+name: Deploy QuARC with the latest pyQuARC version
 
 on:
   push:
     branches:
       - master
       - dev
+      - staging
       - feature/auto_update_quarc
   workflow_dispatch:
 
@@ -19,6 +20,8 @@ jobs:
         run: |
           if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
             echo "ENV=prod" >> "$GITHUB_ENV"
+          elif [[ $GITHUB_REF == 'refs/heads/staging' ]]; then
+            echo "ENV=stage" >> "$GITHUB_ENV"
           fi
 
       - name: Configure AWS Credentials
@@ -40,7 +43,7 @@ jobs:
 
       - name: Install CDK
         run: |
-          npm install -g aws-cdk@latest
+          npm install -g aws-cdk@2.25.0
 
       - name: Download latest pyQuARC version if needed
         run: |
@@ -52,7 +55,7 @@ jobs:
         run: |
           cd deploy
           pip install -r requirements.txt
-          cdk deploy --require-approval never
+          cdk deploy --all --require-approval never
           cd ..
 
       - name: Update SSM Param to new version tag

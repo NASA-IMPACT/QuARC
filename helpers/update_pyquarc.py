@@ -46,12 +46,12 @@ if __name__ == "__main__":
 
         failure = install(zip_file)
 
-        if not failure:
-            # If the installation succeeds, set required env variables to be used in next steps
-            env_file = os.environ.get('GITHUB_ENV')
-
-            with open(env_file, "a") as myfile:
-                myfile.write("NEEDS_DEPLOYMENT=true\n")
-                myfile.write(f"NEW_VERSION={version}")
-        else:
+        if failure:
             raise Exception(f"Failed to update pyQuARC to the latest version {version}")
+        
+        # If the installation succeeds, set required env variables to be used in next steps
+        env_file = os.environ.get('GITHUB_ENV')
+
+        with open(env_file, "a") as myfile:
+            myfile.write("NEEDS_DEPLOYMENT=true\n")
+            myfile.write(f"NEW_VERSION={version}")
