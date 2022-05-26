@@ -1,9 +1,6 @@
 name: Update pyQuARC version and deploy
 
 on:
-  push:
-    branches:
-      - feature/auto_update_quarc
   schedule:
     - cron: '0 0 * * *' # Run everyday at midnight
   workflow_dispatch:
@@ -14,6 +11,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: Set environment based on branch
+        run: |
+          if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
+              echo "ENV=prod" >> "$GITHUB_ENV"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
