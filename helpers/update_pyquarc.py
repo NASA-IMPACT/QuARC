@@ -1,4 +1,4 @@
-import requests, zipfile, io, os, sys
+import io, os, requests, sys, zipfile
 
 from utils import get_parameter, ssm_param_name
 
@@ -7,40 +7,51 @@ REPO = "pyQuARC"
 
 API_URL = f"https://api.github.com/repos/{OWNER}/{REPO}/releases/latest"
 
-response = requests.get(API_URL)
-response.raise_for_status()
 
-response = response.json()
-version = response.get("tag_name", "v1.0.0")
+def api_response(url):
+    """
+    Returns the response from the API, raises exception if not 200
+    """
+    response = requests.get(url)
+    response.raise_for_status()
+    return response
 
-# Get the current version being used by QuARC
-curr_version = get_parameter(ssm_param_name)
+def latest_release(response):
+    """
+    Returns the tagname and URL of the latest release.
+    """
+    response = response.json()
+    return response["tag_name"], response["zipball_url"]
 
-force_flag = "--force" in sys.argv
-
-if (version != curr_version) or force_flag:
-    # Zip of the latest release
-    zip_url = response["zipball_url"]
-
-    zip_response = requests.get(zip_url)
-    zip_response.raise_for_status()
-    zip_file = zipfile.ZipFile(io.BytesIO(zip_response.content))
-
-    # Extract the zip file to the tmp/ directory
+def install(zip_file):
+    """
+    Installs the latest pyQuARC release into the layers folder
+    """
     zip_file.extractall("tmp/")
-
     # Get the first directory in the list (folder name is pyQuARC<SOMEHASH>)
     directory = [x for x in os.listdir('tmp/') if os.path.isdir(f"tmp/{x}")][0]
+    return os.system(f"pip install tmp/{directory} --target=layers/pyQuARC/python")
 
-    # Run pyQuARC installation
-    return_code = os.system(f"pip install tmp/{directory} --target=layers/pyQuARC/python")
 
-    if return_code == 0:
-        # If the installation succeeds, set required env variables to be used in next steps
-        env_file = os.environ.get('GITHUB_ENV')
+if __name__ == "__main__":
+    force = "--force" in sys.argv
+    curr_version = get_parameter(ssm_param_name)
 
-        with open(env_file, "a") as myfile:
-            myfile.write("NEEDS_DEPLOYMENT=true\n")
-            myfile.write(f"NEW_VERSION={version}")
-    else:
-        raise Exception("Failed to update pyQuARC")
+    response = api_response(API_URL)
+    version, zipball_url = latest_release(response)
+
+    if (version != curr_version) or force:
+        zip_response = api_response(zipball_url)
+        zip_file = zipfile.ZipFile(io.BytesIO(zip_response.content))
+
+        failure = install(zip_file)
+
+        if not failure:
+            # If the installation succeeds, set required env variables to be used in next steps
+            env_file = os.environ.get('GITHUB_ENV')
+
+            with open(env_file, "a") as myfile:
+                myfile.write("NEEDS_DEPLOYMENT=true\n")
+                myfile.write(f"NEW_VERSION={version}")
+        else:
+            raise Exception(f"Failed to update pyQuARC to the latest version {version}")
