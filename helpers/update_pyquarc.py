@@ -1,4 +1,4 @@
-import requests, zipfile, io, os
+import requests, zipfile, io, os, sys
 
 from utils import get_parameter, ssm_param_name
 
@@ -16,7 +16,9 @@ version = response.get("tag_name", "v1.0.0")
 # Get the current version being used by QuARC
 curr_version = get_parameter(ssm_param_name)
 
-if version != curr_version:
+force_flag = "--force" in sys.argv
+
+if (version != curr_version) or force_flag:
     # Zip of the latest release
     zip_url = response["zipball_url"]
 
