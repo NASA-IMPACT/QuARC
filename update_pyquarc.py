@@ -36,6 +36,9 @@ if version != current_pyquarc_version:
 
     if return_code == 0:
         update_parameter(ssm_param_name, version)
-        os.system(f"echo NEEDS_DEPLOYMENT=true >> $GITHUB_ENV")
+        env_file = os.environ.get('GITHUB_ENV')
+
+        with open(env_file, "a") as myfile:
+            myfile.write("NEEDS_DEPLOYMENT=true")
     else:
         print("Failed to update pyQuARC")
