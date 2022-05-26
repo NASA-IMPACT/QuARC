@@ -27,20 +27,38 @@ jobs:
         with:
           python-version: 3.8
 
-      - name: Update pyQuARC layer if required
+       - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14.15.1"
+
+      - name: Install CDK
+        run: |
+          npm install -g aws-cdk
+
+      - name: Download latest pyQuARC version if needed
         run: |
           pip install requests boto3
           python helpers/update_pyquarc.py
 
-      - name: CDK deploy if required
+      # - name: CDK deploy
+      #   id: cdkdeploy
+      #   if: "${{ env.NEEDS_DEPLOYMENT == 'true' }}"
+      #   uses: youyo/aws-cdk-github-actions@v2
+      #   with:
+      #     cdk_subcommand: 'deploy'
+      #     cdk_args: '--require-approval never'
+      #     working_dir: 'deploy'
+      #     actions_comment: false
+
+      - name: Run CDK Deploy
         id: cdkdeploy
         if: "${{ env.NEEDS_DEPLOYMENT == 'true' }}"
-        uses: youyo/aws-cdk-github-actions@v2
-        with:
-          cdk_subcommand: 'deploy'
-          cdk_args: '--require-approval never'
-          working_dir: 'deploy'
-          actions_comment: false
+        run: |
+          cd deploy
+          pip install -r requirements.txt
+          cdk deploy --require-approval never
+          cd ..
 
       - name: Update SSM Param to new version tag
         if: steps.cdkdeploy.outcome == 'success'
