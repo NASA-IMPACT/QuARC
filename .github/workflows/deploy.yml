@@ -45,7 +45,7 @@ jobs:
       - name: Download latest pyQuARC version if needed
         run: |
           pip install requests boto3
-          python helpers/update_pyquarc.py
+          python helpers/update_pyquarc.py --force
 
       - name: Run CDK Deploy
         run: |
@@ -55,7 +55,7 @@ jobs:
           cd ..
 
       - name: Update SSM Param to new version tag
-        if: steps.cdkdeploy.outcome == 'success' && env.NEW_VERSION != ''
+        if: steps.cdkdeploy.outcome == 'success'
         run: python helpers/write_ssm.py ${{ env.NEW_VERSION }}
 
       - name: Update swagger docs
