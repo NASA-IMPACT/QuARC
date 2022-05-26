@@ -1,8 +1,8 @@
 # pyQuARC as a service: cloud infrastructure
 
-* Status: proposed
+* Status: approved
 * Deciders: @xhagrg
-* Date: 2022-04-21
+* Date: 2022-05-11
 
 ## Context and Problem Statement
 
