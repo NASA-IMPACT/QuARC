@@ -33,6 +33,7 @@ jobs:
           python helpers/update_pyquarc.py
 
       - name: CDK deploy if required
+        id: cdkdeploy
         if: "${{ env.NEEDS_DEPLOYMENT == 'true' }}"
         uses: youyo/aws-cdk-github-actions@v2
         with:
@@ -42,7 +43,8 @@ jobs:
           actions_comment: false
 
       - name: Update SSM Param to new version tag
-        run: python helpers/write_ssm.py
+        if: steps.cdkdeploy.outcome == "success" || steps.cdkdeploy.outcome == "skipped"
+        run: python helpers/write_ssm.py ${{ env.NEW_VERSION }}
 
       - name: Update swagger docs
         run: aws s3 sync . s3://${{ secrets.BUCKET_NAME }}/docs/ --exclude="*" --include="docs.yaml" 
