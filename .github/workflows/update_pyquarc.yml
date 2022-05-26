@@ -37,7 +37,7 @@ jobs:
 
       - name: Install CDK
         run: |
-          npm install -g aws-cdk
+          npm install -g aws-cdk@latest
 
       - name: Download latest pyQuARC version if needed
         run: |

@@ -40,7 +40,7 @@ jobs:
 
       - name: Install CDK
         run: |
-          npm install -g aws-cdk
+          npm install -g aws-cdk@latest
 
       - name: Download latest pyQuARC version if needed
         run: |
@@ -48,6 +48,7 @@ jobs:
           python helpers/update_pyquarc.py --force
 
       - name: Run CDK Deploy
+        id: cdkdeploy
         run: |
           cd deploy
           pip install -r requirements.txt
