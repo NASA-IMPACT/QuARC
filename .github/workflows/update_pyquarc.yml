@@ -15,7 +15,8 @@ jobs:
       - name: Set environment based on branch
         run: |
           if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
-              echo "ENV=prod" >> "$GITHUB_ENV"
+            echo "ENV=prod" >> "$GITHUB_ENV"
+          fi
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
