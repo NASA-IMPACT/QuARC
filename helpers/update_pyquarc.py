@@ -1,24 +1,9 @@
 import requests, zipfile, io, os
-import boto3
 
-
-ssm_client = boto3.client('ssm')
-
-
-def get_parameter(name):
-    parameter = ssm_client.get_parameter(Name=name)
-    return parameter['Parameter']['Value']
-
-def update_parameter(name, value):
-    ssm_client.put_parameter(
-        Name=name,
-        Overwrite=True,
-        Value=value,
-    )
+from utils import get_parameter, ssm_param_name
 
 owner = "NASA-IMPACT"
 repo = "pyQuARC"
-ssm_param_name = f"/quarc/{os.environ.get('ENV', 'dev')}/pyquarc/version"
 
 api_url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
 response = requests.get(api_url).json()
@@ -35,10 +20,10 @@ if version != current_pyquarc_version:
     return_code = os.system(f"pip install tmp/{directory} --target=layers/pyQuARC/python")
 
     if return_code == 0:
-        update_parameter(ssm_param_name, version)
         env_file = os.environ.get('GITHUB_ENV')
 
         with open(env_file, "a") as myfile:
-            myfile.write("NEEDS_DEPLOYMENT=true")
+            myfile.write("NEEDS_DEPLOYMENT=true\n")
+            myfile.write(f"NEW_VERSION={version}")
     else:
         print("Failed to update pyQuARC")

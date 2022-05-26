@@ -30,7 +30,7 @@ jobs:
       - name: Update pyQuARC layer if required
         run: |
           pip install requests boto3
-          python update_pyquarc.py
+          python helpers/update_pyquarc.py
 
       - name: CDK deploy if required
         if: "${{ env.NEEDS_DEPLOYMENT == 'true' }}"
@@ -40,6 +40,9 @@ jobs:
           cdk_args: '--require-approval never'
           working_dir: 'deploy'
           actions_comment: false
+
+      - name: Update SSM Param to new version tag
+        run: python helpers/write_ssm.py
 
       - name: Update swagger docs
         run: aws s3 sync . s3://${{ secrets.BUCKET_NAME }}/docs/ --exclude="*" --include="docs.yaml" 
