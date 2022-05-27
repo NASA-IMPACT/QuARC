@@ -19,6 +19,8 @@ jobs:
         run: |
           if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
             echo "ENV=prod" >> "$GITHUB_ENV"
+          elif [[ $GITHUB_REF == 'refs/heads/staging' ]]; then
+            echo "ENV=stage" >> "$GITHUB_ENV"
           fi
 
       - name: Configure AWS Credentials
@@ -33,21 +35,12 @@ jobs:
         with:
           python-version: 3.8
 
-      - name: Use Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: "14.15.1"
-
-      - name: Install CDK
-        run: |
-          npm install -g aws-cdk@latest
-
       - name: Download latest pyQuARC version if needed
         run: |
           pip install requests boto3
           python helpers/update_pyquarc.py
 
-      - name: CDK deploy if required
+      - name: Run CDK Deploy
         id: cdkdeploy
         if: "${{ env.NEW_VERSION != '' }}"
         uses: youyo/aws-cdk-github-actions@v2
