@@ -3,6 +3,9 @@ name: Update pyQuARC version and deploy
 on:
   schedule:
     - cron: '0 0 * * *' # Run everyday at midnight
+  push:
+    branches:
+      - feature/auto_update_quarc
   workflow_dispatch:
 
 jobs:
@@ -44,14 +47,15 @@ jobs:
           pip install requests boto3
           python helpers/update_pyquarc.py
 
-      - name: Run CDK Deploy
+      - name: CDK deploy if required
         id: cdkdeploy
-        if: "${{ env.NEEDS_DEPLOYMENT == 'true' }}"
-        run: |
-          cd deploy
-          pip install -r requirements.txt
-          cdk deploy --require-approval never
-          cd ..
+        if: "${{ env.NEW_VERSION != '' }}"
+        uses: youyo/aws-cdk-github-actions@v2
+        with:
+          cdk_subcommand: 'deploy'
+          cdk_args: '--require-approval never'
+          working_dir: 'deploy'
+          actions_comment: false
 
       - name: Update SSM Param to new version tag
         if: steps.cdkdeploy.outcome == 'success'

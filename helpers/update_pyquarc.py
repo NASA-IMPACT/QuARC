@@ -53,5 +53,5 @@ if __name__ == "__main__":
         env_file = os.environ.get('GITHUB_ENV')
 
         with open(env_file, "a") as myfile:
-            myfile.write("NEEDS_DEPLOYMENT=true\n")
+            # myfile.write("NEEDS_DEPLOYMENT=true\n")
             myfile.write(f"NEW_VERSION={version}")
