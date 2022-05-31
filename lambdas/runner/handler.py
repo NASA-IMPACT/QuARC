@@ -24,8 +24,6 @@ def handler(event, context):
     request_body_bytes = base64.b64decode(request_body_base64)
     base64_message_str = request_body_bytes.decode("utf-8")
 
-    print(base64_message_str)
-
     data_dict = convert_data_str_to_dict(base64_message_str)
 
     file_content = data_dict.get("file", "")
@@ -33,10 +31,6 @@ def handler(event, context):
     concept_id = data_dict.get("concept_id", "")
     format = data_dict.get("format", "")
 
-    print(format)
-    print(data_dict)
-    print(file_content)
-    print(concept_id)
 
     response = {
     "isBase64Encoded": False,
@@ -52,9 +46,6 @@ def handler(event, context):
     if file_content:
         with open(filepath, "w") as filepointer:
             filepointer.write(data_dict.get("file"))
-
-    with open(filepath, "r") as filepointer:
-            print(filepointer.read())
 
     try:
         arc = ARC(
