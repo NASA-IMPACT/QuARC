@@ -7,6 +7,27 @@ RESPONSE = {
     "headers": {},
     "body": ""
 }
+def results_parser(data):
+    meta = {}
+
+    data = data[0]
+    total_errors = 0
+    total_valid = 0
+    error_fields = []
+    for k,v in data["errors"].items():
+        if not k=="result" and v:
+            for _,value in v.items():
+                if value["valid"] == False:
+                    info = value["message"][0].split(":")[0]
+                    if info == "Info" or info == "Warning" or info == "Error":
+                        total_errors += 1
+                        error_fields.append(k)
+                else:
+                    total_valid += 1
+    meta["total_errors"] = total_errors
+    meta["total_valid"] = total_valid
+    meta["error_fields"] = error_fields
+    return meta
 
 def handler(event, context):
     request_body = json.loads(event.get("body", "{}"))
@@ -18,7 +39,14 @@ def handler(event, context):
             metadata_format=request_body.get('format', 'echo10'),
         )
         results = arc.validate()
-        response['body'] = json.dumps(results)
+        final_output = {}
+        final_output["details"] = results
+        final_output["meta"] = results_parser(results)
+        final_output["params"] = {
+            "concept_ids" : [request_body.get('concept_id')],
+            "metadata_format" : request_body.get('format', 'echo10')
+        }
+        response['body'] = json.dumps(final_output)
     except Exception as e:
         response['statusCode'] = 500
         response['body'] = str(e)
