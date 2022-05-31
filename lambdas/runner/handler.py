@@ -1,12 +1,8 @@
 from pyQuARC import ARC
 import json
 
-RESPONSE = {
-    "isBase64Encoded": False,
-    "statusCode": 200,
-    "headers": {},
-    "body": ""
-}
+RESPONSE = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
+
 
 def handler(event, context):
     request_body = json.loads(event.get("body", "{}"))
@@ -14,23 +10,18 @@ def handler(event, context):
 
     try:
         arc = ARC(
-            input_concept_ids=[request_body.get('concept_id')],
-            metadata_format=request_body.get('format', 'echo10'),
+            input_concept_ids=[request_body.get("concept_id")],
+            metadata_format=request_body.get("format", "echo10"),
         )
         results = arc.validate()
-        response['body'] = json.dumps(results)
+        response["body"] = json.dumps(results)
     except Exception as e:
-        response['statusCode'] = 500
-        response['body'] = str(e)
-    return response        
+        response["statusCode"] = 500
+        response["body"] = str(e)
+    return response
 
 
-if __name__=='__main__':
-    sample_event = {
-        "body": json.dumps({
-            "concept_id": "C1214470488-ASF",
-            "format": "echo10"
-        })
-    }
+if __name__ == "__main__":
+    sample_event = {"body": json.dumps({"concept_id": "C1214470488-ASF", "format": "echo10"})}
 
     print(handler(sample_event, None))

@@ -16,6 +16,7 @@ def api_response(url):
     response.raise_for_status()
     return response
 
+
 def latest_release(response):
     """
     Returns the tagname and URL of the latest release.
@@ -23,13 +24,14 @@ def latest_release(response):
     response = response.json()
     return response["tag_name"], response["zipball_url"]
 
+
 def install(zip_file):
     """
     Installs the latest pyQuARC release into the layers folder
     """
     zip_file.extractall("tmp/")
     # Get the first directory in the list (folder name is pyQuARC<SOMEHASH>)
-    directory = [x for x in os.listdir('tmp/') if os.path.isdir(f"tmp/{x}")][0]
+    directory = [x for x in os.listdir("tmp/") if os.path.isdir(f"tmp/{x}")][0]
     return os.system(f"pip install tmp/{directory} --target=layers/pyQuARC/python")
 
 
@@ -48,9 +50,9 @@ if __name__ == "__main__":
 
         if failure:
             raise Exception(f"Failed to update pyQuARC to the latest version {version}")
-        
+
         # If the installation succeeds, set required env variables to be used in next steps
-        env_file = os.environ.get('GITHUB_ENV')
+        env_file = os.environ.get("GITHUB_ENV")
 
         with open(env_file, "a") as myfile:
             myfile.write(f"NEW_VERSION={version}")
