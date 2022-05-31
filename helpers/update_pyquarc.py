@@ -1,4 +1,9 @@
-import io, os, requests, sys, zipfile
+import io
+import os
+import sys
+import zipfile
+
+import requests
 
 from utils import get_parameter, ssm_param_name
 
