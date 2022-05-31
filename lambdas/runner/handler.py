@@ -1,4 +1,3 @@
-# import subprocess
 from os import makedirs, path
 from pyQuARC import ARC
 import json
@@ -15,7 +14,7 @@ def convert_data_str_to_dict(data_str) -> dict:
             key = collection_data[index][collection_data[index].find('name="')+ 6:].rstrip('"\r')
             data_dict[key] = collection_data[index + 2].rstrip('\r')
         if "name=" in collection_data[index] and "file" in collection_data[index]:
-            filename = collection_data[index][collection_data[index].find('filename"="')+ 11:].rstrip('"\r')
+            filename = collection_data[index][collection_data[index].find('filename="')+ 10:].rstrip('"\r')
             data_dict["file"] = collection_data[index + 3].rstrip('\r')
             data_dict["filename"] = filename
     return data_dict
@@ -24,6 +23,8 @@ def handler(event, context):
     request_body_base64 = event.get("body", "{}")
     request_body_bytes = base64.b64decode(request_body_base64)
     base64_message_str = request_body_bytes.decode("utf-8")
+
+    print(base64_message_str)
 
     data_dict = convert_data_str_to_dict(base64_message_str)
 
@@ -44,39 +45,27 @@ def handler(event, context):
     "body": ""
     }
 
-    # XNOR operator
-    if not(bool(filename) ^ bool(concept_id)):
-        response['statusCode'] = 500     # think of some statuscode here
-        response["body"] = "Please pass either concept id or file"
-    else:
-        print("run the project")
+    tmp_dir = "/tmp"
+    if not path.exists(tmp_dir):
+        makedirs(tmp_dir)
+    filepath = path.join(tmp_dir, filename)
+    if file_content:
+        with open(filepath, "w") as filepointer:
+            filepointer.write(data_dict.get("file"))
 
-        #Avoid try here
-        try:
-            tmp_dir = "/tmp"
-            if not path.exists(tmp_dir):
-                makedirs(tmp_dir)
-            filepath = path.join(tmp_dir, filename)
-            if file_content:
-                with open(filepath, "w") as filepointer:
-                    filepointer.write(data_dict.get("file"))
-        except:
-            pass
-        print(filepath)
-        with open(filepath, "r") as f:
-            print(f.read().encode())
+    with open(filepath, "r") as filepointer:
+            print(filepointer.read())
 
-        try:
-            arc = ARC(
-                input_concept_ids = concept_id,
-                metadata_format = format,
-                file_path = filepath
-            )
-            results = arc.validate()
-            response['body'] = json.dumps(results)
-        except Exception as e:
-            response['statusCode'] = 500
-            response['body'] = str(e)
+    try:
+        arc = ARC(
+            metadata_format = format,
+            file_path = filepath
+        )
+        results = arc.validate()
+        response['body'] = json.dumps(results)
+    except Exception as e:
+        response['statusCode'] = 500
+        response['body'] = str(e)
     return response
         
 
