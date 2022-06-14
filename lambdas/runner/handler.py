@@ -1,34 +1,37 @@
+import base64
+import json
 from os import makedirs, path
 from pyQuARC import ARC
-import json
-import base64
+from requests_toolbelt import MultipartDecoder
 
+def parse_content_disposition(content_disposition):
+    unparsed_properties = [property.strip() for property in content_disposition.split(";")][1:]
+    parsed_properties = {}
+    for unparsed_property in unparsed_properties:
+        attr, value = unparsed_property.split("=")
+        parsed_properties[attr] = value.strip('"')
+    return parsed_properties
 
-def convert_data_str_to_dict(data_str) -> dict:
-    collection_data = data_str.split('\n')
-    data_dict = {}
-    for index in range(len(collection_data)):
-        if "WebKitFormBoundary" in collection_data[index]:
-            continue
-        if "name=" in collection_data[index] and not "file" in collection_data[index]:
-            key = collection_data[index][collection_data[index].find('name="')+ 6:].rstrip('"\r')
-            data_dict[key] = collection_data[index + 2].rstrip('\r')
-        if "name=" in collection_data[index] and "file" in collection_data[index]:
-            filename = collection_data[index][collection_data[index].find('filename="')+ 10:].rstrip('"\r')
-            data_dict["file"] = collection_data[index + 3].rstrip('\r')
-            data_dict["filename"] = filename
-    return data_dict
+def decode_parts(request_parts):
+    parsed_result = {}
+    print(request_parts)
+    for part in request_parts:
+        content = part.content.decode("utf-8")
+        print(part.headers)
+        parsed_properties = parse_content_disposition(part.headers[b"Content-Disposition"].decode("utf-8"))
+        parsed_result = { **parsed_result, parsed_properties.pop("name"): content, **parsed_properties }
+    return parsed_result
 
 def handler(event, context):
     request_body_base64 = event.get("body", "{}")
     request_body_bytes = base64.b64decode(request_body_base64)
-    base64_message_str = request_body_bytes.decode("utf-8")
-
-    data_dict = convert_data_str_to_dict(base64_message_str)
+    decoder = MultipartDecoder(request_body_bytes, event["headers"]["content-type"])
+    data_dict = decode_parts(decoder.parts)
+    print(data_dict)
 
     file_content = data_dict.get("file", "")
     filename = data_dict.get("filename", "")
-    concept_id = data_dict.get("concept_id", "")
+    concept_ids = data_dict.get("concept_id", "")
     format = data_dict.get("format", "")
 
 
@@ -39,19 +42,25 @@ def handler(event, context):
     "body": ""
     }
 
-    tmp_dir = "/tmp"
-    if not path.exists(tmp_dir):
-        makedirs(tmp_dir)
-    filepath = path.join(tmp_dir, filename)
     if file_content:
+        tmp_dir = "/tmp"
+        if not path.exists(tmp_dir):
+            makedirs(tmp_dir)
+        filepath = path.join(tmp_dir, filename)
         with open(filepath, "w") as filepointer:
             filepointer.write(data_dict.get("file"))
 
     try:
-        arc = ARC(
-            metadata_format = format,
-            file_path = filepath
-        )
+        if file_content:
+            arc = ARC(
+                metadata_format = format,
+                file_path = filepath
+            )
+        else:
+            arc = ARC(
+                metadata_format = format,
+                input_concept_ids = concept_ids
+            )
         results = arc.validate()
         response['body'] = json.dumps(results)
     except Exception as e:
