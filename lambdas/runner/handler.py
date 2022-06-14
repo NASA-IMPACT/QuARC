@@ -2,36 +2,40 @@ from pyQuARC import ARC
 import json
 
 RESPONSE = {
-    "isBase64Encoded": False,
-    "statusCode": 200,
+    "is_base64_encoded": False,
+    "status_code": 200,
     "headers": {},
     "body": ""
 }
-def results_parser(data):
-    meta = {}
+def results_parser(detailed_data):
+    """ This function accepts metadata assessment results obtained
+    from pyquarc and parse the results to obtain consolidated total errors, 
+    total valid and error fields.
+    """
 
-    data = data[0]
-    total_errors = 0
-    total_valid = 0
-    error_fields = []
-    for k,v in data["errors"].items():
-        if not k=="result" and v:
-            for _,value in v.items():
-                if value["valid"] == False:
-                    info = value["message"][0].split(":")[0]
-                    if info == "Info" or info == "Warning" or info == "Error":
-                        total_errors += 1
-                        error_fields.append(k)
+    meta_info = {
+        "total_errors": 0,
+        "total_valid": 0,
+        "error_fields": []   
+    }
+    for field_name,field_details in detailed_data[0]["errors"].items():
+        if not field_name=="result" and field_details:
+            for _,check_messages in field_details.items():
+                if check_messages["valid"] == False:
+                    info = check_messages["message"][0].split(":")[0]
+                    if info in ["Info", "Warning", "Error"]:
+                        meta_info["total_errors"] += 1
+                        meta_info["error_fields"].append(field_name)
                 else:
-                    total_valid += 1
-    meta["total_errors"] = total_errors
-    meta["total_valid"] = total_valid
-    meta["error_fields"] = error_fields
-    return meta
+                    meta_info["total_valid"] += 1
+    return meta_info
+
 
 def handler(event, context):
+    print(event.get("body", "{}"))
     request_body = json.loads(event.get("body", "{}"))
     response = RESPONSE
+    final_output = {}
 
     try:
         arc = ARC(
@@ -39,7 +43,7 @@ def handler(event, context):
             metadata_format=request_body.get('format', 'echo10'),
         )
         results = arc.validate()
-        final_output = {}
+        
         final_output["details"] = results
         final_output["meta"] = results_parser(results)
         final_output["params"] = {
@@ -47,9 +51,11 @@ def handler(event, context):
             "metadata_format" : request_body.get('format', 'echo10')
         }
         response['body'] = json.dumps(final_output)
+
     except Exception as e:
-        response['statusCode'] = 500
+        response['status_code'] = 500
         response['body'] = str(e)
+
     return response        
 
 
