@@ -1,8 +1,10 @@
 import base64
 import json
 from os import makedirs, path
+
 from pyQuARC import ARC
 from requests_toolbelt import MultipartDecoder
+
 
 def parse_content_disposition(content_disposition):
     unparsed_properties = [property.strip() for property in content_disposition.split(";")][1:]
