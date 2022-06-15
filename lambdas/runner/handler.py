@@ -59,7 +59,7 @@ def handler(event, context):
         else:
             arc = ARC(
                 metadata_format = format,
-                input_concept_ids = concept_ids
+                input_concept_ids = [concept_ids]
             )
         results = arc.validate()
         response["body"] = json.dumps(results)
