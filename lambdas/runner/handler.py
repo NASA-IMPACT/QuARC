@@ -16,10 +16,8 @@ def parse_content_disposition(content_disposition):
 
 def decode_parts(request_parts):
     parsed_result = {}
-    print(request_parts)
     for part in request_parts:
         content = part.content.decode("utf-8")
-        print(part.headers)
         parsed_properties = parse_content_disposition(part.headers[b"Content-Disposition"].decode("utf-8"))
         parsed_result = { **parsed_result, parsed_properties.pop("name"): content, **parsed_properties }
     return parsed_result
@@ -29,7 +27,6 @@ def handler(event, context):
     request_body_bytes = base64.b64decode(request_body_base64)
     decoder = MultipartDecoder(request_body_bytes, event["headers"]["content-type"])
     data_dict = decode_parts(decoder.parts)
-    print(data_dict)
 
     file_content = data_dict.get("file", "")
     filename = data_dict.get("filename", "")
