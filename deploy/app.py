@@ -8,7 +8,6 @@ from deploy.stack import AppStack
 
 
 app = core.App()
-AppStack(app, f"{APP_NAME}-{ENV}",
-)
+AppStack(app, f"{APP_NAME}-{ENV}")
 
 app.synth()

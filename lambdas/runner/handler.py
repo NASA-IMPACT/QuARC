@@ -5,6 +5,12 @@ from os import makedirs, path
 from pyQuARC import ARC
 from requests_toolbelt import MultipartDecoder
 
+RESPONSE = {
+    "isBase64Encoded": False,
+    "statusCode": 200,
+    "headers": {},
+    "body": ""
+}
 
 def parse_content_disposition(content_disposition):
     unparsed_properties = [property.strip() for property in content_disposition.split(";")][1:]
@@ -34,12 +40,7 @@ def handler(event, context):
     format = data_dict.get("format", "")
 
 
-    response = {
-    "isBase64Encoded": False,
-    "statusCode": 200,
-    "headers": {},
-    "body": ""
-    }
+    response = RESPONSE
 
     if file_content:
         tmp_dir = "/tmp"
@@ -61,20 +62,14 @@ def handler(event, context):
                 input_concept_ids = concept_ids
             )
         results = arc.validate()
-        response['body'] = json.dumps(results)
+        response["body"] = json.dumps(results)
     except Exception as e:
-        response['statusCode'] = 500
-        response['body'] = str(e)
+        response["statusCode"] = 500
+        response["body"] = str(e)
     return response
-        
 
 
-if __name__=='__main__':
-    sample_event = {
-        "body": json.dumps({
-            "concept_id": "C1214470488-ASF",
-            "format": "echo10"
-        })
-    }
+if __name__ == "__main__":
+    sample_event = {"body": json.dumps({"concept_id": "C1214470488-ASF", "format": "echo10"})}
 
     print(handler(sample_event, None))

@@ -1,0 +1,58 @@
+name: Deploy QuARC with the latest pyQuARC version
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+      - staging
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set environment based on branch
+        run: |
+          if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
+            echo "ENV=prod" >> "$GITHUB_ENV"
+          elif [[ $GITHUB_REF == 'refs/heads/staging' ]]; then
+            echo "ENV=stage" >> "$GITHUB_ENV"
+          fi
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Download latest pyQuARC version if needed
+        run: |
+          pip install requests boto3
+          python helpers/update_pyquarc.py --force
+
+      - name: Run CDK Deploy
+        id: cdkdeploy
+        if: "${{ env.NEW_VERSION != '' }}"
+        uses: youyo/aws-cdk-github-actions@v2
+        with:
+          cdk_subcommand: 'deploy'
+          cdk_args: '--require-approval never'
+          working_dir: 'deploy'
+          actions_comment: false
+
+      - name: Update SSM Param to new version tag
+        if: steps.cdkdeploy.outcome == 'success'
+        run: python helpers/write_ssm.py ${{ env.NEW_VERSION }}
+
+      - name: Update swagger docs
+        run: aws s3 sync . s3://${{ secrets.BUCKET_NAME }}/docs/ --exclude="*" --include="docs.yaml"
