@@ -4,3 +4,4 @@ env/
 
 layers/
 .venv/*
+venv
