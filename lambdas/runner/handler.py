@@ -25,7 +25,7 @@ def results_parser(detailed_data):
     for field_name,field_details in detailed_data[0]["errors"].items():
         if not field_name=="result" and field_details:
             for _,check_messages in field_details.items():
-                if check_messages["valid"] == False:
+                if not check_messages["valid"] :
                     info = check_messages["message"][0].split(":")[0]
                     if info in ["Info", "Warning", "Error"]:
                         meta_info["total_errors"] += 1
