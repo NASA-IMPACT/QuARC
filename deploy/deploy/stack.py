@@ -28,8 +28,10 @@ class AppStack(core.Stack):
 
         # The lambda that actually runs pyQuARC and the validation that it performs
 
-        runner = lambda_python_.PythonFunction(self, f"{construct_id}-runner",
-            entry='../lambdas/runner/',
+        runner = lambda_python_.PythonFunction(
+            self,
+            f"{construct_id}-runner",
+            entry="../lambdas/runner/",
             runtime=lambda_.Runtime.PYTHON_3_8,
             index="handler.py",
             handler="handler",
