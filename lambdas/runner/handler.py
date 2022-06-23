@@ -3,9 +3,27 @@ import json
 from os import makedirs, path
 
 from pyQuARC import ARC
+from request_validator.fields import *
+from request_validator.serializers import *
 from requests_toolbelt import MultipartDecoder
 
-RESPONSE = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
+
+class SampleSerializer(Serializer):
+    format = CharField(
+        source="format", choices=["echo10", "dif10"], required=True, allow_blank=False
+    )
+    concept_id = CharField(source="concept_id")
+    file = CharField(source="file")
+    filename = CharField(source="filename")
+
+    def _validate(self, initial_data):
+        if (not initial_data.get("concept_id") and not initial_data.get("file")) or (
+            initial_data.get("concept_id") and initial_data.get("file")
+        ):
+            self._all_fields_valid = False
+            self.add_error("concept_id/file", "Please pass either concept_id or file")
+
+        return super()._validate(initial_data)
 
 
 def results_parser(detailed_data):
@@ -53,42 +71,51 @@ def decode_parts(request_parts):
 
 
 def handler(event, context):
+    response = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
     request_body_base64 = event.get("body", "{}")
     request_body_bytes = base64.b64decode(request_body_base64)
     decoder = MultipartDecoder(request_body_bytes, event["headers"]["content-type"])
     data_dict = decode_parts(decoder.parts)
+    print(response)
 
-    file_content = data_dict.get("file", "")
-    filename = data_dict.get("filename", "")
-    concept_ids = data_dict.get("concept_id", "")
-    format = data_dict.get("format", "")
+    validator = SampleSerializer(data=data_dict)
+    if validator.is_valid():
+        validated_data = validator.validate_data()
+        print("validated")
 
-    response = RESPONSE
-    final_output = {}
+        file_content = validated_data.get("file", "")
+        filename = validated_data.get("filename", "")
+        concept_ids = validated_data.get("concept_id", "")
+        format = validated_data.get("format", "")
 
-    if file_content:
-        tmp_dir = "/tmp"
-        if not path.exists(tmp_dir):
-            makedirs(tmp_dir)
-        filepath = path.join(tmp_dir, filename)
-        with open(filepath, "w") as filepointer:
-            filepointer.write(data_dict.get("file"))
+        final_output = {}
 
-    try:
         if file_content:
-            arc = ARC(metadata_format=format, file_path=filepath)
-        else:
-            arc = ARC(metadata_format=format, input_concept_ids=[concept_ids])
-        results = arc.validate()
+            tmp_dir = "/tmp"
+            if not path.exists(tmp_dir):
+                makedirs(tmp_dir)
+            filepath = path.join(tmp_dir, filename)
+            with open(filepath, "w") as filepointer:
+                filepointer.write(validated_data.get("file"))
 
-        final_output["details"] = results
-        final_output["meta"] = results_parser(results)
-        final_output["params"] = data_dict
-        response["body"] = json.dumps(final_output)
+        try:
+            if file_content:
+                arc = ARC(metadata_format=format, file_path=filepath)
+            else:
+                arc = ARC(metadata_format=format, input_concept_ids=[concept_ids])
+            results = arc.validate()
 
-    except Exception as e:
+            final_output["details"] = results
+            final_output["meta"] = results_parser(results)
+            final_output["params"] = validated_data
+            response["body"] = json.dumps(final_output)
+
+        except Exception as e:
+            response["statusCode"] = 500
+            response["body"] = str(e)
+    else:
         response["statusCode"] = 500
-        response["body"] = str(e)
+        response["body"] = str(validator.get_errors())
 
     return response
 
