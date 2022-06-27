@@ -10,7 +10,7 @@ from requests_toolbelt import MultipartDecoder
 
 class SampleSerializer(Serializer):
     format = CharField(
-        source="format", choices=["echo10", "dif10"], required=True, allow_blank=False
+        source="format", choices=["echo10", "dif10", "echo-c", "echo-g", "umm-c", "umm-g"], required=True, allow_blank=False
     )
     concept_id = CharField(source="concept_id")
     file = CharField(source="file")
