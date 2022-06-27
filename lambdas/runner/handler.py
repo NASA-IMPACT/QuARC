@@ -3,8 +3,8 @@ import json
 from os import makedirs, path
 
 from pyQuARC import ARC
-from request_validator.fields import *
-from request_validator.serializers import *
+from request_validator.fields import CharField
+from request_validator.serializers import Serializer
 from requests_toolbelt import MultipartDecoder
 
 
