@@ -32,18 +32,21 @@ def results_parser(detailed_data):
     total valid and error fields.
     """
 
-    meta_info = {"total_errors": 0, "total_valid": 0, "error_fields": []}
-    for field_name, field_details in detailed_data[0]["errors"].items():
-        if not field_name == "result" and field_details:
-            for _, check_messages in field_details.items():
-                if not check_messages["valid"]:
-                    info = check_messages["message"][0].split(":")[0]
-                    if info in ["Info", "Warning", "Error"]:
-                        meta_info["total_errors"] += 1
-                        meta_info["error_fields"].append(field_name)
-                else:
-                    meta_info["total_valid"] += 1
-    return meta_info
+    result = []
+    for data in detailed_data:
+        meta_info = {"total_errors": 0, "total_valid": 0, "error_fields": []}
+        for field_name, field_details in detailed_data[0]["errors"].items():
+            if not field_name == "result" and field_details:
+                for _, check_messages in field_details.items():
+                    if not check_messages["valid"]:
+                        info = check_messages["message"][0].split(":")[0]
+                        if info in ["Info", "Warning", "Error"]:
+                            meta_info["total_errors"] += 1
+                            meta_info["error_fields"].append(field_name)
+                    else:
+                        meta_info["total_valid"] += 1
+        result.append(meta_info)
+    return result
 
 
 def parse_content_disposition(content_disposition):
@@ -102,7 +105,7 @@ def handler(event, context):
             if file_content:
                 arc = ARC(metadata_format=format, file_path=filepath)
             else:
-                arc = ARC(metadata_format=format, input_concept_ids=[concept_ids])
+                arc = ARC(metadata_format=format, input_concept_ids=concept_ids.split(","))
             results = arc.validate()
 
             final_output["details"] = results
