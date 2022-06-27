@@ -34,18 +34,20 @@ def results_parser(detailed_data):
 
     result = []
     for data in detailed_data:
-        meta_info = {"total_errors": 0, "total_valid": 0, "error_fields": []}
-        for field_name, field_details in detailed_data[0]["errors"].items():
-            if not field_name == "result" and field_details:
-                for _, check_messages in field_details.items():
-                    if not check_messages["valid"]:
-                        info = check_messages["message"][0].split(":")[0]
-                        if info in ["Info", "Warning", "Error"]:
-                            meta_info["total_errors"] += 1
-                            meta_info["error_fields"].append(field_name)
-                    else:
-                        meta_info["total_valid"] += 1
-        result.append(meta_info)
+        error_fields = []
+        for field_name, field_details in data["errors"].items():
+            for check_messages in field_details.values():
+                if not check_messages["valid"]:
+                    error_fields.append(field_name)
+                    break
+        result.append(
+            {
+                "concept_id": data["concept_id"],
+                "total_errors": len(error_fields),
+                "total_valid": len(data["errors"]) - len(error_fields) ,
+                "error_fields": error_fields,
+            }
+        )
     return result
 
 
@@ -79,12 +81,10 @@ def handler(event, context):
     request_body_bytes = base64.b64decode(request_body_base64)
     decoder = MultipartDecoder(request_body_bytes, event["headers"]["content-type"])
     data_dict = decode_parts(decoder.parts)
-    print(response)
 
     validator = SampleSerializer(data=data_dict)
     if validator.is_valid():
         validated_data = validator.validate_data()
-        print("validated")
 
         file_content = validated_data.get("file", "")
         filename = validated_data.get("filename", "")
