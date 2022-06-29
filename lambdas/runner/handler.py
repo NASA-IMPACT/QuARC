@@ -23,9 +23,7 @@ class SampleSerializer(Serializer):
     filename = CharField(source="filename")
 
     def _validate(self, initial_data):
-        if (not initial_data.get("concept_id") and not initial_data.get("file")) or (
-            initial_data.get("concept_id") and initial_data.get("file")
-        ):
+        if not (bool(initial_data.get("concept_id")) ^ bool(initial_data.get("file"))):
             self._all_fields_valid = False
             self.add_error("concept_id/file", "Please pass either concept_id or file")
 
