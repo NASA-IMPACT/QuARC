@@ -8,6 +8,9 @@ from request_validator.serializers import Serializer
 from requests_toolbelt import MultipartDecoder
 
 
+TMP_DIR = "/tmp"
+
+
 class SampleSerializer(Serializer):
     format = CharField(
         source="format",
@@ -97,10 +100,9 @@ def handler(event, context):
         final_output = {}
 
         if file_content:
-            tmp_dir = "/tmp"
-            if not path.exists(tmp_dir):
-                makedirs(tmp_dir)
-            filepath = path.join(tmp_dir, filename)
+            if not path.exists(TMP_DIR):
+                makedirs(TMP_DIR)
+            filepath = path.join(TMP_DIR, filename)
             with open(filepath, "w") as filepointer:
                 filepointer.write(validated_data.get("file"))
 
@@ -112,19 +114,14 @@ def handler(event, context):
             results = arc.validate()
 
             final_output["details"] = results
-            print("I am inside final output", len(final_output))
             final_output["meta"] = results_parser(results)
             final_output["params"] = validated_data
-            print("this is final output",final_output)
             response["body"] = json.dumps(final_output)
-            print(response)
 
         except Exception as e:
-            print("I am on exception")
             response["statusCode"] = 500
             response["body"] = str(e)
     else:
-        print("I am here")
         response["statusCode"] = 500
         response["body"] = str(validator.get_errors())
 
