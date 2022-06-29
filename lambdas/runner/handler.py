@@ -38,16 +38,16 @@ def results_parser(detailed_data):
     result = []
     for data in detailed_data:
         error_fields = []
-        for field_name, field_details in data["errors"].items():
+        for field_name, field_details in data.get("errors").items():
             for check_messages in field_details.values():
-                if not check_messages["valid"]:
+                if not check_messages.get("valid"):
                     error_fields.append(field_name)
                     break
         result.append(
             {
-                "concept_id": data["concept_id"],
+                "concept_id": data.get("concept_id"),
                 "total_errors": len(error_fields),
-                "total_valid": len(data["errors"]) - len(error_fields),
+                "total_valid": len(data.get("errors")) - len(error_fields),
                 "error_fields": error_fields,
             }
         )
@@ -112,14 +112,19 @@ def handler(event, context):
             results = arc.validate()
 
             final_output["details"] = results
+            print("I am inside final output", len(final_output))
             final_output["meta"] = results_parser(results)
             final_output["params"] = validated_data
+            print("this is final output",final_output)
             response["body"] = json.dumps(final_output)
+            print(response)
 
         except Exception as e:
+            print("I am on exception")
             response["statusCode"] = 500
             response["body"] = str(e)
     else:
+        print("I am here")
         response["statusCode"] = 500
         response["body"] = str(validator.get_errors())
 
