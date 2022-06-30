@@ -83,7 +83,12 @@ def handler(event, context):
     response = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
     request_body_base64 = event.get("body", "{}")
     request_body_bytes = base64.b64decode(request_body_base64)
-    decoder = MultipartDecoder(request_body_bytes, event["headers"]["content-type"])
+    # Dictionary is case sensitive, we have observed that "content-type" can be camel case or lower case
+    try:
+        content_type = event["headers"]["content-type"]
+    except KeyError:
+        content_type = event["headers"]["Content-Type"]
+    decoder = MultipartDecoder(request_body_bytes, content_type)
     data_dict = decode_parts(decoder.parts)
 
     validator = SampleSerializer(data=data_dict)
