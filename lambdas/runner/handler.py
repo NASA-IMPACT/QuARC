@@ -95,10 +95,10 @@ def handler(event, context):
     if validator.is_valid():
         validated_data = validator.validate_data()
 
-        file_content = validated_data.get("file", "")
-        filename = validated_data.get("filename", "")
-        concept_ids = validated_data.get("concept_id", "")
-        format = validated_data.get("format", "")
+        file_content = validated_data.get("file")
+        filename = validated_data.get("filename")
+        concept_ids = validated_data.get("concept_id")
+        format = validated_data.get("format")
 
         final_output = {}
 
