@@ -1,12 +1,12 @@
 import base64
 import json
-from os import makedirs, path
+from os import path
+from pathlib import Path
 
 from pyQuARC import ARC
 from request_validator.fields import CharField
 from request_validator.serializers import Serializer
 from requests_toolbelt import MultipartDecoder
-
 
 TMP_DIR = "/tmp"
 
@@ -100,8 +100,7 @@ def handler(event, context):
         final_output = {}
 
         if file_content:
-            if not path.exists(TMP_DIR):
-                makedirs(TMP_DIR)
+            Path(TMP_DIR).mkdir(exist_ok=True)
             filepath = path.join(TMP_DIR, filename)
             with open(filepath, "w") as filepointer:
                 filepointer.write(validated_data.get("file"))
