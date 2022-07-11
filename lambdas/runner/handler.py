@@ -39,7 +39,7 @@ def results_parser(detailed_data):
     result = []
     for data in detailed_data:
         error_fields = []
-        for field_name, field_details in data.get("errors").items():
+        for field_name, field_details in data.get("errors", {}).items():
             for check_messages in field_details.values():
                 if not check_messages.get("valid"):
                     error_fields.append(field_name)
