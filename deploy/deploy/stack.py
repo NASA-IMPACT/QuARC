@@ -2,6 +2,7 @@ import config
 
 from aws_cdk import (
     core,
+    aws_lambda_python as lambda_python_,
     aws_lambda as lambda_,
     aws_apigateway as apigateway,
 )
@@ -26,12 +27,14 @@ class AppStack(core.Stack):
         )
 
         # The lambda that actually runs pyQuARC and the validation that it performs
-        runner = lambda_.Function(
+
+        runner = lambda_python_.PythonFunction(
             self,
             f"{construct_id}-runner",
-            code=lambda_.Code.from_asset("../lambdas/runner/"),
+            entry="../lambdas/runner/",
             runtime=lambda_.Runtime.PYTHON_3_8,
-            handler="handler.handler",
+            index="handler.py",
+            handler="handler",
             layers=[pyQuARC_layer],
             function_name=f"{construct_id}-runner",
         )
@@ -48,6 +51,7 @@ class AppStack(core.Stack):
                 stage_name=config.ENV,
             ),
             rest_api_name=f"{construct_id}-api",
+            binary_media_types=["*/*"],
         )
 
         validate = api.root.add_resource("validate")
