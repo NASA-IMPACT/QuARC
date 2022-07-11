@@ -79,6 +79,29 @@ def decode_parts(request_parts):
     return parsed_result
 
 
+def wrap_inputs(validated_data):
+    wrapped_inputs = {}
+
+    file_content = validated_data.get("file")
+    filename = validated_data.get("filename")
+    concept_ids = validated_data.get("concept_id")
+    format = validated_data.get("format")
+
+    if file_content:
+        Path(TMP_DIR).mkdir(exist_ok=True)
+        filepath = path.join(TMP_DIR, filename)
+        with open(filepath, "w") as filepointer:
+            filepointer.write(validated_data.get("file"))
+
+        wrapped_inputs["file_path"] = filepath
+    else:
+        wrapped_inputs["input_concept_ids"] = concept_ids.split(",")
+
+    wrapped_inputs["metadata_format"] = format
+
+    return wrapped_inputs
+
+
 def handler(event, context):
     response = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
     request_body_base64 = event.get("body", "{}")
@@ -91,25 +114,11 @@ def handler(event, context):
     validator = SampleSerializer(data=data_dict)
     if validator.is_valid():
         validated_data = validator.validate_data()
-
-        file_content = validated_data.get("file")
-        filename = validated_data.get("filename")
-        concept_ids = validated_data.get("concept_id")
-        format = validated_data.get("format")
-
+        wrapped_inputs = wrap_inputs(validated_data)
         final_output = {}
 
-        if file_content:
-            Path(TMP_DIR).mkdir(exist_ok=True)
-            filepath = path.join(TMP_DIR, filename)
-            with open(filepath, "w") as filepointer:
-                filepointer.write(validated_data.get("file"))
-
         try:
-            if file_content:
-                arc = ARC(metadata_format=format, file_path=filepath)
-            else:
-                arc = ARC(metadata_format=format, input_concept_ids=concept_ids.split(","))
+            arc = ARC(**wrapped_inputs)
             results = arc.validate()
 
             final_output["details"] = results
