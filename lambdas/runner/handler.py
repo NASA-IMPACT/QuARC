@@ -1,11 +1,33 @@
 import base64
 import json
-from os import makedirs, path
+from os import path
+from pathlib import Path
 
 from pyQuARC import ARC
+from request_validator.fields import CharField
+from request_validator.serializers import Serializer
 from requests_toolbelt import MultipartDecoder
 
-RESPONSE = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
+TMP_DIR = "/tmp"
+
+
+class SampleSerializer(Serializer):
+    format = CharField(
+        source="format",
+        choices=["echo10", "dif10", "echo-c", "echo-g", "umm-c", "umm-g"],
+        required=True,
+        allow_blank=False,
+    )
+    concept_id = CharField(source="concept_id")
+    file = CharField(source="file")
+    filename = CharField(source="filename")
+
+    def _validate(self, initial_data):
+        if not (bool(initial_data.get("concept_id")) ^ bool(initial_data.get("file"))):
+            self._all_fields_valid = False
+            self.add_error("concept_id/file", "Please pass either concept_id or file")
+
+        return super()._validate(initial_data)
 
 
 def results_parser(detailed_data):
@@ -14,18 +36,23 @@ def results_parser(detailed_data):
     total valid and error fields.
     """
 
-    meta_info = {"total_errors": 0, "total_valid": 0, "error_fields": []}
-    for field_name, field_details in detailed_data[0]["errors"].items():
-        if not field_name == "result" and field_details:
-            for _, check_messages in field_details.items():
-                if not check_messages["valid"]:
-                    info = check_messages["message"][0].split(":")[0]
-                    if info in ["Info", "Warning", "Error"]:
-                        meta_info["total_errors"] += 1
-                        meta_info["error_fields"].append(field_name)
-                else:
-                    meta_info["total_valid"] += 1
-    return meta_info
+    result = []
+    for data in detailed_data:
+        error_fields = []
+        for field_name, field_details in data.get("errors", {}).items():
+            for check_messages in field_details.values():
+                if not check_messages.get("valid"):
+                    error_fields.append(field_name)
+                    break
+        result.append(
+            {
+                "concept_id": data.get("concept_id"),
+                "total_errors": len(error_fields),
+                "total_valid": len(data.get("errors")) - len(error_fields),
+                "error_fields": error_fields,
+            }
+        )
+    return result
 
 
 def parse_content_disposition(content_disposition):
@@ -52,43 +79,59 @@ def decode_parts(request_parts):
     return parsed_result
 
 
-def handler(event, context):
-    request_body_base64 = event.get("body", "{}")
-    request_body_bytes = base64.b64decode(request_body_base64)
-    decoder = MultipartDecoder(request_body_bytes, event["headers"]["content-type"])
-    data_dict = decode_parts(decoder.parts)
+def wrap_inputs(validated_data):
+    wrapped_inputs = {}
 
-    file_content = data_dict.get("file", "")
-    filename = data_dict.get("filename", "")
-    concept_ids = data_dict.get("concept_id", "")
-    format = data_dict.get("format", "")
-
-    response = RESPONSE
-    final_output = {}
+    file_content = validated_data.get("file")
+    filename = validated_data.get("filename")
+    concept_ids = validated_data.get("concept_id")
+    format = validated_data.get("format")
 
     if file_content:
-        tmp_dir = "/tmp"
-        if not path.exists(tmp_dir):
-            makedirs(tmp_dir)
-        filepath = path.join(tmp_dir, filename)
+        Path(TMP_DIR).mkdir(exist_ok=True)
+        filepath = path.join(TMP_DIR, filename)
         with open(filepath, "w") as filepointer:
-            filepointer.write(data_dict.get("file"))
+            filepointer.write(validated_data.get("file"))
 
-    try:
-        if file_content:
-            arc = ARC(metadata_format=format, file_path=filepath)
-        else:
-            arc = ARC(metadata_format=format, input_concept_ids=[concept_ids])
-        results = arc.validate()
+        wrapped_inputs["file_path"] = filepath
+    else:
+        wrapped_inputs["input_concept_ids"] = concept_ids.split(",")
 
-        final_output["details"] = results
-        final_output["meta"] = results_parser(results)
-        final_output["params"] = data_dict
-        response["body"] = json.dumps(final_output)
+    wrapped_inputs["metadata_format"] = format
 
-    except Exception as e:
+    return wrapped_inputs
+
+
+def handler(event, context):
+    response = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
+    request_body_base64 = event.get("body", "{}")
+    request_body_bytes = base64.b64decode(request_body_base64)
+    # Dictionary is case sensitive, we have observed that "content-type" can be camel case or lower case
+    content_type = event["headers"].get("Content-Type") or event["headers"].get("content-type")
+    decoder = MultipartDecoder(request_body_bytes, content_type)
+    data_dict = decode_parts(decoder.parts)
+
+    validator = SampleSerializer(data=data_dict)
+    if validator.is_valid():
+        validated_data = validator.validate_data()
+        wrapped_inputs = wrap_inputs(validated_data)
+        final_output = {}
+
+        try:
+            arc = ARC(**wrapped_inputs)
+            results = arc.validate()
+
+            final_output["details"] = results
+            final_output["meta"] = results_parser(results)
+            final_output["params"] = validated_data
+            response["body"] = json.dumps(final_output)
+
+        except Exception as e:
+            response["statusCode"] = 500
+            response["body"] = str(e)
+    else:
         response["statusCode"] = 500
-        response["body"] = str(e)
+        response["body"] = str(validator.get_errors())
 
     return response
 
