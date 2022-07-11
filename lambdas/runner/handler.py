@@ -8,6 +8,26 @@ from requests_toolbelt import MultipartDecoder
 RESPONSE = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
 
 
+def results_parser(detailed_data):
+    """This function accepts metadata assessment results obtained
+    from pyquarc and parse the results to obtain consolidated total errors,
+    total valid and error fields.
+    """
+
+    meta_info = {"total_errors": 0, "total_valid": 0, "error_fields": []}
+    for field_name, field_details in detailed_data[0]["errors"].items():
+        if not field_name == "result" and field_details:
+            for _, check_messages in field_details.items():
+                if not check_messages["valid"]:
+                    info = check_messages["message"][0].split(":")[0]
+                    if info in ["Info", "Warning", "Error"]:
+                        meta_info["total_errors"] += 1
+                        meta_info["error_fields"].append(field_name)
+                else:
+                    meta_info["total_valid"] += 1
+    return meta_info
+
+
 def parse_content_disposition(content_disposition):
     unparsed_properties = [property.strip() for property in content_disposition.split(";")][1:]
     parsed_properties = {}
@@ -44,6 +64,7 @@ def handler(event, context):
     format = data_dict.get("format", "")
 
     response = RESPONSE
+    final_output = {}
 
     if file_content:
         tmp_dir = "/tmp"
@@ -59,10 +80,16 @@ def handler(event, context):
         else:
             arc = ARC(metadata_format=format, input_concept_ids=[concept_ids])
         results = arc.validate()
-        response["body"] = json.dumps(results)
+
+        final_output["details"] = results
+        final_output["meta"] = results_parser(results)
+        final_output["params"] = data_dict
+        response["body"] = json.dumps(final_output)
+
     except Exception as e:
         response["statusCode"] = 500
         response["body"] = str(e)
+
     return response
 
 
