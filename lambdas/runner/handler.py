@@ -31,23 +31,34 @@ class SampleSerializer(Serializer):
 
 
 def results_parser(detailed_data):
-    """This function accepts metadata assessment results obtained
-    from pyquarc and parse the results to obtain consolidated total errors,
-    total valid and error fields.
     """
+        This function accepts metadata assessment results obtained
+        from pyquarc and parse the results to obtain total errors,total info,
+        total warnings,total valid and list of error fields that contains non valid metadata.
+        """
 
     result = []
     for data in detailed_data:
         error_fields = []
+        total_info_count = total_error_count = total_warning_count = 0
         for field_name, field_details in data.get("errors", {}).items():
             for check_messages in field_details.values():
                 if not check_messages.get("valid"):
+                    message_info = check_messages.get("message")
+                    type_of_message = message_info[0].split(":")[0]
+                    if type_of_message == "Info":
+                        total_info_count += 1
+                    elif type_of_message == "Error":
+                        total_error_count += 1
+                    else :
+                        total_warning_count += 1   
                     error_fields.append(field_name)
-                    break
         result.append(
             {
                 "concept_id": data.get("concept_id"),
-                "total_errors": len(error_fields),
+                "total_errors": total_error_count,
+                "total_infos" : total_info_count,
+                "total_warnings" : total_warning_count,
                 "total_valid": len(data.get("errors")) - len(error_fields),
                 "error_fields": error_fields,
             }
