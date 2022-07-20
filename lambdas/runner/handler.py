@@ -1,3 +1,4 @@
+import ast
 import base64
 import json
 from os import path
@@ -119,8 +120,12 @@ def handler(event, context):
     request_body_bytes = base64.b64decode(request_body_base64)
     # Dictionary is case sensitive, we have observed that "content-type" can be camel case or lower case
     content_type = event["headers"].get("Content-Type") or event["headers"].get("content-type")
-    decoder = MultipartDecoder(request_body_bytes, content_type)
-    data_dict = decode_parts(decoder.parts)
+    if content_type == "application/json":
+        data_dict_str = request_body_bytes.decode("UTF-8")
+        data_dict = ast.literal_eval(data_dict_str)
+    else:
+        decoder = MultipartDecoder(request_body_bytes, content_type)
+        data_dict = decode_parts(decoder.parts)
 
     validator = SampleSerializer(data=data_dict)
     if validator.is_valid():
