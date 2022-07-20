@@ -113,7 +113,6 @@ def wrap_inputs(validated_data):
 
     return wrapped_inputs
 
-
 def handler(event, context):
     response = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
     request_body_base64 = event.get("body", "{}")
@@ -136,7 +135,9 @@ def handler(event, context):
         try:
             arc = ARC(**wrapped_inputs)
             results = arc.validate()
-
+            # Replace /tmp/ from the filename
+            if results[0].get("file"):
+                results[0]["file"] = results[0]["file"][5:]
             final_output["details"] = results
             final_output["meta"] = results_parser(results)
             final_output["params"] = validated_data
@@ -146,7 +147,7 @@ def handler(event, context):
             response["statusCode"] = 500
             response["body"] = str(e)
     else:
-        response["statusCode"] = 500
+        response["statusCode"] = 400
         response["body"] = str(validator.get_errors())
 
     return response
