@@ -52,7 +52,7 @@ def results_parser(detailed_data):
                     elif type_of_message == "Error":
                         total_error_count += 1
                     else:
-                        total_warning_count += 1   
+                        total_warning_count += 1
                     error_fields.append(field_name)
         result.append(
             {
