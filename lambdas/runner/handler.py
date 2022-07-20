@@ -15,7 +15,7 @@ TMP_DIR = "/tmp"
 class SampleSerializer(Serializer):
     format = CharField(
         source="format",
-        choices=["echo10", "dif10", "echo-c", "echo-g", "umm-c", "umm-g"],
+        choices=["dif10", "echo-c", "echo-g", "umm-c", "umm-g"],
         required=True,
         allow_blank=False,
     )
