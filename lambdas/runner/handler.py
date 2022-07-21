@@ -98,12 +98,14 @@ def decode_parts(request_parts):
 
 
 def wrap_inputs(validated_data):
-    wrapped_inputs = {}
-
     file_content = validated_data.get("file")
     filename = validated_data.get("filename")
     concept_ids = validated_data.get("concept_id")
     format = validated_data.get("format")
+
+    wrapped_inputs = {
+        "metadata_format" : format
+    }
 
     if file_content:
         Path(TMP_DIR).mkdir(exist_ok=True)
@@ -115,8 +117,6 @@ def wrap_inputs(validated_data):
     else:
         wrapped_inputs["input_concept_ids"] = concept_ids.split(",")
 
-    wrapped_inputs["metadata_format"] = format
-
     return wrapped_inputs
 
 
@@ -124,6 +124,7 @@ def handler(event, context):
     response = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
     request_body_base64 = event.get("body", "{}")
     request_body_bytes = base64.b64decode(request_body_base64)
+    
     # Dictionary is case sensitive, we have observed that "content-type" can be camel case or lower case
     content_type = event["headers"].get("Content-Type") or event["headers"].get("content-type")
     if content_type == "application/json":
