@@ -57,7 +57,7 @@ def compute_summary(collection_data):
                 try:
                     data_summary[type_of_message] += 1
                 except KeyError as e:
-                    print("Key error")  # log the error as new Error type has been found
+                    print(str(e))  # log the error as new Error type has been found
                 data_summary["error_fields"].append(field_name)
     return data_summary
 
