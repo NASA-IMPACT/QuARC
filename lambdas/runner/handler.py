@@ -1,4 +1,3 @@
-import ast
 import base64
 import json
 from os import path
@@ -57,8 +56,8 @@ def compute_summary(collection_data):
                 type_of_message = message_info[0].split(":")[0]
                 try:
                     data_summary[type_of_message] += 1
-                except:
-                    pass  # log the error as key not found
+                except KeyError as e:
+                    print("Key error")  # log the error as new Error type has been found
                 data_summary["error_fields"].append(field_name)
     return data_summary
 
