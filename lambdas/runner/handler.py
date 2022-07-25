@@ -25,7 +25,7 @@ class SampleSerializer(Serializer):
     def _validate(self, initial_data):
         if not (bool(initial_data.get("concept_id")) ^ bool(initial_data.get("file"))):
             self._all_fields_valid = False
-            self.add_error("concept_id/file", "Please pass either concept_id or file")
+            self.add_error("concept_id/file", "Please enter the concept_id or upload a file.")
 
         return super()._validate(initial_data)
 
