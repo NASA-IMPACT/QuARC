@@ -18,14 +18,21 @@ class SampleSerializer(Serializer):
         required=True,
         allow_blank=False,
     )
+    cmr_query = CharField(source="cmr_query")
     concept_id = CharField(source="concept_id")
     file = CharField(source="file")
     filename = CharField(source="filename")
 
     def _validate(self, initial_data):
-        if not (bool(initial_data.get("concept_id")) ^ bool(initial_data.get("file"))):
+        if not (
+            bool(initial_data.get("concept_id"))
+            ^ bool(initial_data.get("file"))
+            ^ bool(initial_data.get("cmr_query"))
+        ):
             self._all_fields_valid = False
-            self.add_error("concept_id/file", "Please enter the concept_id or upload a file.")
+            self.add_error(
+                "concept_id/file", "Please enter the concept_id or cmr_query or upload a file."
+            )
 
         return super()._validate(initial_data)
 
@@ -119,6 +126,7 @@ def wrap_inputs(validated_data):
     filename = validated_data.get("filename")
     concept_ids = validated_data.get("concept_id")
     format = validated_data.get("format")
+    cmr_query = validated_data.get("cmr_query")
 
     wrapped_inputs = {"metadata_format": format}
 
@@ -129,6 +137,8 @@ def wrap_inputs(validated_data):
             filepointer.write(validated_data.get("file"))
 
         wrapped_inputs["file_path"] = filepath
+    elif cmr_query:
+        wrapped_inputs["query"] = cmr_query
     else:
         wrapped_inputs["input_concept_ids"] = concept_ids.split(",")
 
@@ -139,11 +149,13 @@ def handler(event, context):
     response = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
     request_body_base64 = event.get("body", "{}")
     request_body_bytes = base64.b64decode(request_body_base64)
+    print(request_body_base64)
+    print(request_body_bytes)
 
     # Dictionary is case sensitive, we have observed that "content-type" can be camel case or lower case
     content_type = event["headers"].get("Content-Type") or event["headers"].get("content-type")
     if content_type == "application/json":
-        data_dict = json.loads(request_body_bytes)
+        data_dict = json.loads(request_body_bytes.decode("utf-8"))
     else:
         decoder = MultipartDecoder(request_body_bytes, content_type)
         data_dict = decode_parts(decoder.parts)
@@ -152,6 +164,7 @@ def handler(event, context):
     if validator.is_valid():
         validated_data = validator.validate_data()
         wrapped_inputs = wrap_inputs(validated_data)
+        print(wrapped_inputs)
         final_output = {}
 
         try:
