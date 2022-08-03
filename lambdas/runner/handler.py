@@ -54,10 +54,8 @@ def compute_summary(collection_data):
             if not check_messages.get("valid"):
                 message_info = check_messages.get("message")
                 type_of_message = message_info[0].split(":")[0]
-                try:
+                if data_summary.get("type_of_message"):
                     data_summary[type_of_message] += 1
-                except KeyError as e:
-                    print(str(e))  # log the error as new Error type has been found
                 data_summary["error_fields"].append(field_name)
     return data_summary
 
