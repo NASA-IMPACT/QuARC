@@ -1,6 +1,6 @@
 import base64
 import json
-from os import path,environ
+from os import environ, path
 from pathlib import Path
 
 from pyQuARC import ARC
@@ -173,7 +173,7 @@ def handler(event, context):
         # set environ variables
         if validated_data.get("auth_key"):
             environ["AUTH_TOKEN"] = validated_data.get("auth_key")
-            
+
         wrapped_inputs = wrap_inputs(validated_data)
         print(wrapped_inputs)
         final_output = {}
