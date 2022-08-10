@@ -1,6 +1,6 @@
 import base64
 import json
-from os import path
+from os import path,environ
 from pathlib import Path
 
 from pyQuARC import ARC
@@ -21,6 +21,8 @@ class SampleSerializer(Serializer):
     cmr_query = CharField(source="cmr_query")
     concept_id = CharField(source="concept_id")
     file = CharField(source="file")
+    cmr_host = CharField(source="cmr_host")
+    auth_key = CharField(source="auth_key")
     filename = CharField(source="filename")
 
     def _validate(self, initial_data):
@@ -126,6 +128,7 @@ def wrap_inputs(validated_data):
     filename = validated_data.get("filename")
     concept_ids = validated_data.get("concept_id")
     format = validated_data.get("format")
+    cmr_host = validated_data.get("cmr_host")
     cmr_query = validated_data.get("cmr_query")
 
     wrapped_inputs = {"metadata_format": format}
@@ -141,6 +144,9 @@ def wrap_inputs(validated_data):
         wrapped_inputs["query"] = cmr_query
     else:
         wrapped_inputs["input_concept_ids"] = concept_ids.split(",")
+
+    if cmr_host:
+        wrapped_inputs["cmr_host"] = cmr_host
 
     return wrapped_inputs
 
@@ -163,6 +169,11 @@ def handler(event, context):
     validator = SampleSerializer(data=data_dict)
     if validator.is_valid():
         validated_data = validator.validate_data()
+
+        # set environ variables
+        if validated_data.get("auth_key"):
+            environ["AUTH_TOKEN"] = validated_data.get("auth_key")
+            
         wrapped_inputs = wrap_inputs(validated_data)
         print(wrapped_inputs)
         final_output = {}
