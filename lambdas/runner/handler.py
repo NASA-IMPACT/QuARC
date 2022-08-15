@@ -130,28 +130,22 @@ def wrap_inputs(validated_data):
     Returns:
         (dict): necessary input parameters ready to be passsed to pyquarc
     """
-    file_content = validated_data.get("file")
-    filename = validated_data.get("filename")
-    concept_ids = validated_data.get("concept_id")
-    format = validated_data.get("format")
-    cmr_host = validated_data.get("cmr_host")
-    cmr_query = validated_data.get("cmr_query")
 
-    wrapped_inputs = {"metadata_format": format}
+    wrapped_inputs = {"metadata_format": validated_data.get("format")}
 
-    if file_content:
+    if file_content:=validated_data.get("file"):
         Path(TMP_DIR).mkdir(exist_ok=True)
-        filepath = path.join(TMP_DIR, filename)
+        filepath = path.join(TMP_DIR, validated_data.get("filename"))
         with open(filepath, "w") as filepointer:
-            filepointer.write(validated_data.get("file"))
+            filepointer.write(file_content)
 
         wrapped_inputs["file_path"] = filepath
-    elif cmr_query:
+    elif cmr_query:= validated_data.get("cmr_query"):
         wrapped_inputs["query"] = cmr_query
     else:
-        wrapped_inputs["input_concept_ids"] = concept_ids.split(",")
+        wrapped_inputs["input_concept_ids"] = validated_data.get("concept_id").split(",")
 
-    if cmr_host:
+    if cmr_host:= validated_data.get("cmr_host"):
         wrapped_inputs["cmr_host"] = cmr_host
 
     return wrapped_inputs
@@ -161,8 +155,6 @@ def handler(event, context):
     response = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
     request_body_base64 = event.get("body", "{}")
     request_body_bytes = base64.b64decode(request_body_base64)
-    print(request_body_base64)
-    print(request_body_bytes)
 
     # Dictionary is case sensitive, we have observed that "content-type" can be camel case or lower case
     content_type = event["headers"].get("Content-Type") or event["headers"].get("content-type")
