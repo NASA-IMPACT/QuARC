@@ -133,19 +133,19 @@ def wrap_inputs(validated_data):
 
     wrapped_inputs = {"metadata_format": validated_data.get("format")}
 
-    if file_content:=validated_data.get("file"):
+    if file_content := validated_data.get("file"):
         Path(TMP_DIR).mkdir(exist_ok=True)
         filepath = path.join(TMP_DIR, validated_data.get("filename"))
         with open(filepath, "w") as filepointer:
             filepointer.write(file_content)
 
         wrapped_inputs["file_path"] = filepath
-    elif cmr_query:= validated_data.get("cmr_query"):
+    elif cmr_query := validated_data.get("cmr_query"):
         wrapped_inputs["query"] = cmr_query
     else:
         wrapped_inputs["input_concept_ids"] = validated_data.get("concept_id").split(",")
 
-    if cmr_host:= validated_data.get("cmr_host"):
+    if cmr_host := validated_data.get("cmr_host"):
         wrapped_inputs["cmr_host"] = cmr_host
 
     return wrapped_inputs
@@ -166,7 +166,7 @@ def handler(event, context):
 
     validator = SampleSerializer(data=data_dict)
     if validator.is_valid():
-        validated_data = validator.validate_data()
+        validated_data = validator._validated_data
 
         # set environ variables
         if validated_data.get("auth_key"):
