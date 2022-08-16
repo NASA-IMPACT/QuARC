@@ -151,11 +151,17 @@ def wrap_inputs(validated_data):
     return wrapped_inputs
 
 
-def handler(event, context):
-    response = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
-    request_body_base64 = event.get("body", "{}")
-    request_body_bytes = base64.b64decode(request_body_base64)
+def reformat_to_dict(event, request_body_bytes):
+    """
+        This function reformats any data of given type to dictionary.
 
+        Args:
+            (dict): request parameters
+            (bytes): request body content
+    s
+        Returns:
+            (dict): converted request body content data to dict
+    """
     # Dictionary is case sensitive, we have observed that "content-type" can be camel case or lower case
     content_type = event["headers"].get("Content-Type") or event["headers"].get("content-type")
     if content_type == "application/json":
@@ -163,6 +169,16 @@ def handler(event, context):
     else:
         decoder = MultipartDecoder(request_body_bytes, content_type)
         data_dict = decode_parts(decoder.parts)
+
+    return data_dict
+
+
+def handler(event, context):
+    response = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
+    request_body_base64 = event.get("body", "{}")
+    request_body_bytes = base64.b64decode(request_body_base64)
+
+    data_dict = reformat_to_dict(event, request_body_bytes)
 
     validator = SampleSerializer(data=data_dict)
     if validator.is_valid():
