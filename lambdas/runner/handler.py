@@ -4,6 +4,7 @@ from os import environ, path
 from pathlib import Path
 
 from pyQuARC import ARC
+from pyQuARC.code.constants import SUPPORTED_FORMATS as FORMATS
 from request_validator.fields import CharField
 from request_validator.serializers import Serializer
 from requests_toolbelt import MultipartDecoder
@@ -14,7 +15,7 @@ TMP_DIR = "/tmp"
 class SampleSerializer(Serializer):
     format = CharField(
         source="format",
-        choices=["dif10", "echo-c", "echo-g", "umm-c", "umm-g"],
+        choices=FORMATS,
         required=True,
         allow_blank=False,
     )
