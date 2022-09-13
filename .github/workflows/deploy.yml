@@ -47,7 +47,7 @@ jobs:
 
       - name: Install CDK
         run: |
-          npm install -g aws-cdk@2.25.0
+          npm install -g aws-cdk
 
       - name: Run CDK Deploy
         id: cdkdeploy
