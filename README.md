@@ -21,3 +21,26 @@ For python, this project uses [Black](https://black.readthedocs.io/en/stable/) f
 - [Black configuration](pyproject.toml)
 - [Flake8 configuration](tox.ini)
 - [Github action](.github/workflows/lint.yml) for linting and formatting check
+
+## How to use
+```
+QUARC_API = "//specify_quarc_api_here"
+CMR_HOST = "//specify_cmr_host_here_uses_default_cmr_if_not_specified"
+import requests
+TOKEN = "//specify_token_if_needed"  
+headers = {"content-type": "application/json"}
+payload = {
+    "format": "echo-c",
+    "cmr_host": CMR_HOST,
+    "auth_key": TOKEN,
+    "concept_id": "C1240487597-CSDA",
+}
+response = requests.post(
+    QUARC_API,
+    data=json.dumps(payload),
+    headers=headers,
+)
+```
+
+Note: You can also change content-type as multipart/form-data to pass a file as collection metadata
+
