@@ -42,5 +42,20 @@ response = requests.post(
 )
 ```
 
-Note: You can also change content-type as multipart/form-data to pass a file as collection metadata
+If you want to use files instead of concept_ids
+```
+
+QUARC_API = "//specify_quarc_api_here"
+with open('file_name', 'rb') as f:
+    payload = {
+        "format": "echo-c"
+    }
+    response = requests.post(   
+        QUARC_API,
+        data=payload,
+        files = {"file": f}
+    )
+result = response.json()
+print(result)
+```
 
