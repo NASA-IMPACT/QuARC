@@ -19,12 +19,18 @@ paths:
                   type: string
                 format:
                   type: string
+                cmr_host:
+                  type: string
+                auth_key:
+                  type: string
             examples:
               '0':
                 value: |-
                   {
                       "concept_id": "C1214470488-ASF",
-                      "format": "echo10"
+                      "format": "echo-c",
+                      "cmr_host": "https://cmr.earthdata.nasa.gov",
+                      "auth_key": "EARTHDATA_AUTH_TOKEN"
                   }
       responses:
         '200':
