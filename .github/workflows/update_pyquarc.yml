@@ -38,6 +38,7 @@ jobs:
       - name: Download latest pyQuARC version if needed
         run: |
           pip install requests boto3
+          pip install -U pip
           python helpers/update_pyquarc.py
 
       - name: Run CDK Deploy
