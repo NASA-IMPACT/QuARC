@@ -39,6 +39,7 @@ jobs:
         run: |
           pip install requests boto3
           pip install -U pip
+          pip uninstall -y pathlib
           python helpers/update_pyquarc.py --force
 
       - name: Run CDK Deploy
