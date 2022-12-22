@@ -6,10 +6,10 @@ Learn more in the linked [Github repo](https://github.com/NASA-IMPACT/pyquarc).
 
 QuARC is a service built on top of pyQuARC to provide easily accessible metadata quality assessment.
 
-### Try it out
+## Try it out
 https://quarc.nasa-impact.net/docs/
 
-### Endpoints
+## Endpoints
 `/validate`
 
 This api reads and evaluates descriptive metadata used to catalog Earth observation data products and files.
@@ -24,23 +24,8 @@ This api reads and evaluates descriptive metadata used to catalog Earth observat
 | `cmr_query	`       |	string	            |This CMR query URL is used for obtaining a list of concept ids and iterating through each collections from the list for assesssing the metadata. For example: https://cmr.uat.earthdata.nasa.gov/search/collections?keyword=csda
 | `auth_key`	       |	string	            |Authorization bearer key if required. For certain environment, we need to pass **Authorization: Bearer** header for downloading metadata from CMR. The token will only authorize for applications that are EDL compliant and do not have unapproved EULAs. You can obtain it from EDL page by following the steps [here](https://urs.earthdata.nasa.gov/documentation/for_users/user_token).
 | `cmr_host	`       |	string	            |(Default: https://cmr.earthdata.nasa.gov ) CMR host URL for downloading metadata. This URL acts as a base URL for downloading metadata. For example: https://cmr.uat.earthdata.nasa.gov/search/ This is CMR URL for UAT environment.
-## Code Formatting and Linting
 
-This project enforces linting and formatting upon pull requests via Github Actions. Formatter and linter config files are included in the repo, and users are encouraged to enable auto-formatting in their code editor, which should automatically use the included configs.
-
-Necessary Python libraries can be installed with `requirements_dev.txt`.
-
-For further details on team coding standards which are not automatically checked by Github Actions, please read the [conventions document](https://docs.google.com/document/d/1b0YSCObQu3yvWeblHDDeIKzapxUkuVQVElGw_rxrC4Q/view).
-
-### Python
-
-For python, this project uses [Black](https://black.readthedocs.io/en/stable/) for formatting and [Flake8](https://flake8.pycqa.org/en/latest/) for linting. Configurations are in the following locations:
-
-- [Black configuration](pyproject.toml)
-- [Flake8 configuration](tox.ini)
-- [Github action](.github/workflows/lint.yml) for linting and formatting check
-
-## How to use
+## Using the API with python
 ```
 QUARC_API = "//specify_quarc_api_here"
 CMR_HOST = "//specify_cmr_host_here_uses_default_cmr_if_not_specified"
@@ -77,3 +62,18 @@ result = response.json()
 print(result)
 ```
 
+## Code Formatting and Linting
+
+This project enforces linting and formatting upon pull requests via Github Actions. Formatter and linter config files are included in the repo, and users are encouraged to enable auto-formatting in their code editor, which should automatically use the included configs.
+
+Necessary Python libraries can be installed with `requirements_dev.txt`.
+
+For further details on team coding standards which are not automatically checked by Github Actions, please read the [conventions document](https://docs.google.com/document/d/1b0YSCObQu3yvWeblHDDeIKzapxUkuVQVElGw_rxrC4Q/view).
+
+### Python
+
+For python, this project uses [Black](https://black.readthedocs.io/en/stable/) for formatting and [Flake8](https://flake8.pycqa.org/en/latest/) for linting. Configurations are in the following locations:
+
+- [Black configuration](pyproject.toml)
+- [Flake8 configuration](tox.ini)
+- [Github action](.github/workflows/lint.yml) for linting and formatting check
