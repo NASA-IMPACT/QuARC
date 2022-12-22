@@ -62,10 +62,11 @@ def compute_summary(collection_data):
     for field_name, field_details in collection_data.get("errors", {}).items():
         for check_messages in field_details.values():
             if not check_messages.get("valid"):
-                message_info = check_messages.get("message")
-                type_of_message = message_info[0].split(":")[0]
-                data_summary[type_of_message] += 1
-                data_summary["error_fields"].append(field_name)
+                # sometimes the check_message is plain "some function no implemented"
+                if message_info := check_messages.get("message"):
+                    type_of_message = message_info[0].split(":")[0]
+                    data_summary[type_of_message] += 1
+                    data_summary["error_fields"].append(field_name)
     return data_summary
 
 
