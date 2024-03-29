@@ -37,7 +37,7 @@ jobs:
 
       - name: Download latest pyQuARC version if needed
         run: |
-          pip install requests boto3
+          pip install requests==2.24.0 boto3
           python helpers/update_pyquarc.py --force
 
       - name: Use Node.js
