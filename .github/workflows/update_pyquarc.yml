@@ -3,9 +3,6 @@ name: Update pyQuARC version and deploy
 on:
   schedule:
     - cron: "0 0 * * *" # Run everyday at midnight
-  push:
-    branches:
-      - feature/auto_update_quarc
   workflow_dispatch:
 
 jobs:
