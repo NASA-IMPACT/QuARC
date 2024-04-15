@@ -22,7 +22,7 @@ class AppStack(core.Stack):
             f"{construct_id}-pyQuARC-layer",
             code=lambda_.Code.from_asset("../layers/pyQuARC/"),
             compatible_architectures=[lambda_.Architecture.X86_64, lambda_.Architecture.ARM_64],
-            compatible_runtimes=[lambda_.Runtime.PYTHON_3_8],
+            compatible_runtimes=[lambda_.Runtime.PYTHON_3_9],
             layer_version_name=f"{construct_id}-pyQuARC-layer",
         )
 
@@ -32,7 +32,7 @@ class AppStack(core.Stack):
             self,
             f"{construct_id}-runner",
             entry="../lambdas/runner/",
-            runtime=lambda_.Runtime.PYTHON_3_8,
+            runtime=lambda_.Runtime.PYTHON_3_9,
             index="handler.py",
             handler="handler",
             layers=[pyQuARC_layer],
