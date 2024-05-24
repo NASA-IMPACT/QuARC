@@ -39,10 +39,10 @@ cdk diff
 cdk deploy
 ```
 
-## Other useful cdk commands
+## Other useful CDK commands
 
- * `cdk ls`          list all stacks in the app
+ * `cdk ls`          lists all stacks in the app
  * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
+ * `cdk deploy`      deploys this stack to your default AWS account/region
+ * `cdk diff`        compares the deployed stack with current state
+ * `cdk docs`        opens the CDK documentation
