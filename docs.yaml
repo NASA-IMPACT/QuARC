@@ -6,6 +6,25 @@ info:
 servers:
   - url: https://quarc.nasa-impact.net/
 paths:
+  /version:
+    get:
+      description: Versions of QuARC and pyQuARC
+      responses:
+        '200':
+          description: Return the version of QuARC and pyQuARC
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pyQuARC:
+                    type: string
+                  QuARC:
+                    type: string
+              example:
+                pyQuARC: "1.0.0"
+                QuARC: "2.0.0"
+
   /validate:
     post:
       description: Validate metadata

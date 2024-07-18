@@ -57,3 +57,6 @@ class AppStack(core.Stack):
 
         validate = api.root.add_resource("validate")
         validate.add_method("POST")
+
+        version = api.root.add_resource("version")
+        version.add_method("GET")
