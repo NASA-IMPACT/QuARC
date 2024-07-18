@@ -37,6 +37,7 @@ class AppStack(core.Stack):
             handler="handler",
             layers=[pyQuARC_layer],
             function_name=f"{construct_id}-runner",
+            environment={"CACHE_DIR": "/tmp"},
         )
 
         # The API Gateway that the integrates with the lambda function, where clients can submit requests
