@@ -9,10 +9,7 @@ paths:
   /version:
     get:
       description: Versions of QuARC and pyQuARC
-      requestBody:
-        content:
-          application/json:
-      response:
+      responses:
         '200':
           description: Return the version of QuARC and pyQuARC
           content:
@@ -24,12 +21,10 @@ paths:
                     type: string
                   QuARC:
                     type: string
-              examples:
-                value: |-
-                  {
-                    "pyQuARC": "1.0.0",
-                    "QuARC": "2.0.0"
-                  }
+              example:
+                pyQuARC: "1.0.0"
+                QuARC: "2.0.0"
+
   /validate:
     post:
       description: Validate metadata
