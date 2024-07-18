@@ -1,5 +1,6 @@
 import base64
 import json
+import pyQuARC
 from os import environ, path
 from pathlib import Path
 
@@ -174,8 +175,7 @@ def reformat_to_dict(event, request_body_bytes):
     return data_dict
 
 
-def handler(event, context):
-    response = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
+def validate(event, response):
     request_body_base64 = event.get("body", "{}")
     request_body_bytes = base64.b64decode(request_body_base64)
 
@@ -190,7 +190,6 @@ def handler(event, context):
             environ[AUTH_TOKEN] = auth_key
 
         wrapped_inputs = wrap_inputs(validated_data)
-        print(wrapped_inputs)
         final_output = {}
 
         try:
@@ -214,7 +213,20 @@ def handler(event, context):
     # Clear out the AUTH_TOKEN env var, so the subsequent requests start fresh
     if AUTH_TOKEN in environ:
         environ.pop(AUTH_TOKEN)
+    return response
 
+
+def handler(event, context):
+    response = response = {"isBase64Encoded": False, "statusCode": 200, "headers": {}, "body": ""}
+
+    if event["path"] == "/version" and event["httpMethod"] == "GET":
+        response["body"] = json.dumps(
+            {"pyQuARC": pyQuARC.__version__, "QuARC": open("version.txt").read()}
+        )
+    elif event["path"] == "/validate" and event["httpMethod"] == "POST":
+        response = validate(event, response)
+    else:
+        response["statusCode"] = 404
     return response
 
 
