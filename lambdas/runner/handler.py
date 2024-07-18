@@ -10,6 +10,7 @@ from request_validator.serializers import Serializer
 from requests_toolbelt import MultipartDecoder
 
 TMP_DIR = "/tmp"
+AUTH_TOKEN = "AUTH_TOKEN"
 
 
 class SampleSerializer(Serializer):
@@ -58,8 +59,7 @@ def compute_summary(collection_data):
         "Warning": 0,
         "error_fields": [],
     }
-
-    for field_name, field_details in collection_data.get("errors", {}).items():
+    for field_name, field_details in (collection_data.get("errors") or {}).items():
         for check_messages in field_details.values():
             if not check_messages.get("valid"):
                 # sometimes the check_message doesn't have message/value because of "some function no implemented" error
@@ -85,7 +85,6 @@ def results_parser(combined_collections):
 
     result = []
     for each_collection_data in combined_collections:
-
         data_summary = compute_summary(each_collection_data)
 
         result.append(
@@ -186,9 +185,9 @@ def handler(event, context):
     if validator.is_valid():
         validated_data = validator._validated_data
 
-        # set environ variables
-        if validated_data.get("auth_key"):
-            environ["AUTH_TOKEN"] = validated_data.get("auth_key")
+        # set the earthdata token as AUTH_TOKEN env var (used by pyQuARC)
+        if auth_key := validated_data.get("auth_key"):
+            environ[AUTH_TOKEN] = auth_key
 
         wrapped_inputs = wrap_inputs(validated_data)
         print(wrapped_inputs)
@@ -212,10 +211,14 @@ def handler(event, context):
         response["statusCode"] = 400
         response["body"] = str(validator.get_errors())
 
+    # Clear out the AUTH_TOKEN env var, so the subsequent requests start fresh
+    if AUTH_TOKEN in environ:
+        environ.pop(AUTH_TOKEN)
+
     return response
 
 
 if __name__ == "__main__":
-    sample_event = {"body": json.dumps({"concept_id": "C1214470488-ASF", "format": "echo10"})}
+    sample_event = {"body": json.dumps({"concept_id": "C1214470488-ASF", "format": "echo-c"})}
 
     print(handler(sample_event, None))
