@@ -41,7 +41,7 @@ class AppStack(core.Stack):
         # The API Gateway that the integrates with the lambda function, where clients can submit requests
         api = apigateway.LambdaRestApi(
             self,
-            f"{construct_id}-api",
+            f"{construct_id}-restapi",
             handler=runner,
             default_cors_preflight_options=apigateway.CorsOptions(
                 allow_origins=apigateway.Cors.ALL_ORIGINS, allow_methods=apigateway.Cors.ALL_METHODS
@@ -49,7 +49,7 @@ class AppStack(core.Stack):
             deploy_options=apigateway.StageOptions(
                 stage_name=config.ENV,
             ),
-            rest_api_name=f"{construct_id}-api",
+            rest_api_name=f"{construct_id}-restapi",
             binary_media_types=["*/*"],
         )
 
