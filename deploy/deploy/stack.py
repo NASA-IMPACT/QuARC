@@ -4,6 +4,8 @@ from aws_cdk import (
     core,
     aws_lambda as lambda_,
     aws_apigateway as apigateway,
+    BundlingOptions,
+    DockerImage,
 )
 
 
@@ -30,7 +32,16 @@ class AppStack(core.Stack):
         runner = lambda_.Function(
             self,
             f"{construct_id}-runner",
-            code=lambda_.Code.from_asset("../lambdas/runner/"),
+            code=lambda_.Code.from_asset(
+                "../lambdas/runner/",
+                bundling=BundlingOptions(
+                    image=DockerImage.from_registry("alpine"),
+                    image=lambda_.Runtime.PYTHON_3_9.bundling_image,
+                    command=[
+                        "bash", "-c", "pip install -r requirements.txt -t /asset-output && cp -au . /asset-output"
+                    ]
+                ),
+            ),
             runtime=lambda_.Runtime.PYTHON_3_9,
             handler="handler.handler",
             layers=[pyQuARC_layer],
