@@ -2,7 +2,6 @@ import config
 
 from aws_cdk import (
     core,
-    aws_lambda_python as lambda_python_,
     aws_lambda as lambda_,
     aws_apigateway as apigateway,
 )
@@ -28,13 +27,12 @@ class AppStack(core.Stack):
 
         # The lambda that actually runs pyQuARC and the validation that it performs
 
-        runner = lambda_python_.PythonFunction(
+        runner = lambda_.Function(
             self,
             f"{construct_id}-runner",
-            entry="../lambdas/runner/",
+            code=lambda_.Code.from_asset("../lambdas/runner/"),
             runtime=lambda_.Runtime.PYTHON_3_9,
-            index="handler.py",
-            handler="handler",
+            handler="handler.handler",
             layers=[pyQuARC_layer],
             function_name=f"{construct_id}-runner",
             environment={"CACHE_DIR": "/tmp"},
