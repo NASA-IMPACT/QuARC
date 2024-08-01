@@ -37,7 +37,7 @@ class AppStack(Stack):
                 bundling=BundlingOptions(
                     image=DockerImage.from_registry("alpine"),
                     command=[
-                        "sh", "-c", "pip install -r requirements.txt -t /asset-output && cp -au . /asset-output"
+                        "sh", "-c", "'pip install -r requirements.txt -t /asset-output && cp -au . /asset-output'"
                     ]
                 ),
             ),
