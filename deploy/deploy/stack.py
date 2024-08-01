@@ -37,7 +37,7 @@ class AppStack(Stack):
                 bundling=BundlingOptions(
                     image=lambda_.Runtime.PYTHON_3_9.bundling_image,
                     command=[
-                        "sh", "-c", "pip install -r requirements.txt -t /asset-output"
+                        "sh", "-c", "pip install -r requirements.txt -t /asset-output && cp -au . /asset-output"
                     ]
                 ),
             ),
