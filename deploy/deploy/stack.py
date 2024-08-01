@@ -1,14 +1,15 @@
 import config
 
 from aws_cdk import (
-    core,
-    aws_lambda_python as lambda_python_,
+    Stack,
     aws_lambda as lambda_,
     aws_apigateway as apigateway,
+    BundlingOptions,
+    DockerImage,
 )
 
 
-class AppStack(core.Stack):
+class AppStack(Stack):
     """
     Stack that deploys the API Gateway and Lambda functions and layers.
     """
@@ -28,13 +29,20 @@ class AppStack(core.Stack):
 
         # The lambda that actually runs pyQuARC and the validation that it performs
 
-        runner = lambda_python_.PythonFunction(
+        runner = lambda_.Function(
             self,
             f"{construct_id}-runner",
-            entry="../lambdas/runner/",
+            code=lambda_.Code.from_asset(
+                "../lambdas/runner/",
+                bundling=BundlingOptions(
+                    image=lambda_.Runtime.PYTHON_3_9.bundling_image,
+                    command=[
+                        "sh", "-c", "pip install -r requirements.txt -t /asset-output && cp -au . /asset-output"
+                    ]
+                ),
+            ),
             runtime=lambda_.Runtime.PYTHON_3_9,
-            index="handler.py",
-            handler="handler",
+            handler="handler.handler",
             layers=[pyQuARC_layer],
             function_name=f"{construct_id}-runner",
             environment={"CACHE_DIR": "/tmp"},
@@ -43,7 +51,7 @@ class AppStack(core.Stack):
         # The API Gateway that the integrates with the lambda function, where clients can submit requests
         api = apigateway.LambdaRestApi(
             self,
-            f"{construct_id}-api",
+            f"{construct_id}-restapi",
             handler=runner,
             default_cors_preflight_options=apigateway.CorsOptions(
                 allow_origins=apigateway.Cors.ALL_ORIGINS, allow_methods=apigateway.Cors.ALL_METHODS
@@ -51,7 +59,7 @@ class AppStack(core.Stack):
             deploy_options=apigateway.StageOptions(
                 stage_name=config.ENV,
             ),
-            rest_api_name=f"{construct_id}-api",
+            rest_api_name=f"{construct_id}-restapi",
             binary_media_types=["*/*"],
         )
 

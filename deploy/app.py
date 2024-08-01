@@ -2,12 +2,12 @@
 
 from config import APP_NAME, ENV
 
-from aws_cdk import core
+from aws_cdk import App
 
 from deploy.stack import AppStack
 
 
-app = core.App()
+app = App()
 AppStack(app, f"{APP_NAME}-{ENV}")
 
 app.synth()
