@@ -35,9 +35,9 @@ class AppStack(Stack):
             code=lambda_.Code.from_asset(
                 "../lambdas/runner/",
                 bundling=BundlingOptions(
-                    image=DockerImage.from_registry("python3.9-alpine"),
+                    image=lambda_.Runtime.PYTHON_3_9.bundling_image,
                     command=[
-                        "sh", "-c", "python -m pip3 install -r requirements.txt -t /asset-output"
+                        "sh", "-c", "pip install -r requirements.txt -t /asset-output"
                     ]
                 ),
             ),
