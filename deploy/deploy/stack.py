@@ -1,7 +1,7 @@
 import config
 
 from aws_cdk import (
-    core,
+    Stack,
     aws_lambda as lambda_,
     aws_apigateway as apigateway,
     BundlingOptions,
@@ -9,7 +9,7 @@ from aws_cdk import (
 )
 
 
-class AppStack(core.Stack):
+class AppStack(Stack):
     """
     Stack that deploys the API Gateway and Lambda functions and layers.
     """
@@ -37,7 +37,7 @@ class AppStack(core.Stack):
                 bundling=BundlingOptions(
                     image=DockerImage.from_registry("alpine"),
                     command=[
-                        "bash", "-c", "pip install -r requirements.txt -t /asset-output && cp -au . /asset-output"
+                        "sh", "-c", "pip install -r requirements.txt -t /asset-output && cp -au . /asset-output"
                     ]
                 ),
             ),
