@@ -6,7 +6,6 @@ from aws_cdk import App
 
 from deploy.stack import AppStack
 
-
 app = App()
 AppStack(app, f"{APP_NAME}-{ENV}")
 
