@@ -58,6 +58,9 @@ class AppStack(Stack):
             ),
             deploy_options=apigateway.StageOptions(
                 stage_name=config.ENV,
+                # Throttle the unauthenticated public endpoint to limit abuse.
+                throttling_rate_limit=20,
+                throttling_burst_limit=40,
             ),
             rest_api_name=f"{construct_id}-restapi",
             binary_media_types=["*/*"],
