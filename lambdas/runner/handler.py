@@ -1,5 +1,8 @@
 import base64
 import json
+import re
+import shutil
+import uuid
 import pyQuARC
 from os import environ, path
 from pathlib import Path
@@ -122,6 +125,36 @@ def decode_parts(request_parts):
     return parsed_result
 
 
+def safe_upload_path(client_filename):
+    """
+    Builds a filesystem path for an uploaded file that is guaranteed to stay
+    within a fresh, server-generated directory under TMP_DIR.
+
+    The client-supplied filename is never trusted for path construction: only a
+    sanitized basename is kept (for display purposes), and it is written into a
+    per-request UUID directory. This defeats absolute paths, traversal (`../`),
+    and cross-request filename collisions in warm Lambda containers.
+
+    Args:
+        client_filename (str): the untrusted filename from the request
+
+    Returns:
+        (str): a safe absolute path to write the upload to
+    """
+    basename = path.basename(client_filename or "")
+    basename = re.sub(r"[^\w.\-]", "_", basename).lstrip(".") or "upload"
+
+    upload_dir = Path(TMP_DIR) / "uploads" / uuid.uuid4().hex
+    upload_dir.mkdir(parents=True)
+    filepath = upload_dir / basename
+
+    # Defense in depth: verify the resolved path is still contained.
+    if not str(filepath.resolve()).startswith(str(upload_dir.resolve()) + path.sep):
+        raise ValueError("Invalid filename")
+
+    return str(filepath)
+
+
 def wrap_inputs(validated_data):
     """
     This function accepts validatated request parameters and then wrap the inputs based on what kind of input parameters are present before passing to the pyquarc package.
@@ -136,8 +169,7 @@ def wrap_inputs(validated_data):
     wrapped_inputs = {"metadata_format": validated_data.get("format")}
 
     if file_content := validated_data.get("file"):
-        Path(TMP_DIR).mkdir(exist_ok=True)
-        filepath = path.join(TMP_DIR, validated_data.get("filename"))
+        filepath = safe_upload_path(validated_data.get("filename"))
         with open(filepath, "w") as filepointer:
             filepointer.write(file_content)
 
@@ -189,30 +221,38 @@ def validate(event, response):
         if auth_key := validated_data.get("auth_key"):
             environ[AUTH_TOKEN] = auth_key
 
-        wrapped_inputs = wrap_inputs(validated_data)
         final_output = {}
 
         try:
+            wrapped_inputs = wrap_inputs(validated_data)
             arc = ARC(**wrapped_inputs)
             results = arc.validate()
-            # Replace /tmp/ from the filename
+            # Return only the uploaded file's basename, never the server path
             if results[0].get("file"):
-                results[0]["file"] = results[0]["file"][5:]
+                results[0]["file"] = path.basename(results[0]["file"])
             final_output["details"] = results
             final_output["meta"] = results_parser(results)
-            final_output["params"] = validated_data
+            # Never echo secrets back to the caller
+            final_output["params"] = {
+                key: value
+                for key, value in validated_data.items()
+                if key not in ("auth_key", "file")
+            }
             response["body"] = json.dumps(final_output)
 
         except Exception as e:
             response["statusCode"] = 500
             response["body"] = str(e)
+        finally:
+            # Clear the AUTH_TOKEN env var and remove uploaded files so
+            # subsequent requests in a warm container start fresh.
+            if AUTH_TOKEN in environ:
+                environ.pop(AUTH_TOKEN)
+            shutil.rmtree(path.join(TMP_DIR, "uploads"), ignore_errors=True)
     else:
         response["statusCode"] = 400
         response["body"] = str(validator.get_errors())
 
-    # Clear out the AUTH_TOKEN env var, so the subsequent requests start fresh
-    if AUTH_TOKEN in environ:
-        environ.pop(AUTH_TOKEN)
     return response
 
 
