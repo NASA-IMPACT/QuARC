@@ -37,7 +37,15 @@ def install(zip_file):
     zip_file.extractall("tmp/")
     # Get the first directory in the list (folder name is pyQuARC<SOMEHASH>)
     directory = [x for x in os.listdir("tmp/") if os.path.isdir(f"tmp/{x}")][0]
-    return os.system(f"pip install tmp/{directory} --target=layers/pyQuARC/python")
+    # Build inside the Lambda-compatible image (Amazon Linux 2, glibc 2.26) so
+    # pip selects manylinux wheels the python3.9 runtime can actually load;
+    # a plain pip install on the CI runner picks manylinux_2_28 wheels
+    # (e.g. lxml >= 5) that fail at import time with GLIBC_2.28 errors.
+    return os.system(
+        'docker run --rm --platform linux/amd64 -v "$PWD":/work -w /work '
+        "public.ecr.aws/sam/build-python3.9 "
+        f"pip install tmp/{directory} --target=layers/pyQuARC/python"
+    )
 
 
 if __name__ == "__main__":
