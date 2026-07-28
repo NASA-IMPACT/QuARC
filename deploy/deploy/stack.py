@@ -5,7 +5,6 @@ from aws_cdk import (
     aws_lambda as lambda_,
     aws_apigateway as apigateway,
     BundlingOptions,
-    DockerImage,
 )
 
 
@@ -37,8 +36,10 @@ class AppStack(Stack):
                 bundling=BundlingOptions(
                     image=lambda_.Runtime.PYTHON_3_9.bundling_image,
                     command=[
-                        "sh", "-c", "pip install -r requirements.txt -t /asset-output && cp -au . /asset-output"
-                    ]
+                        "sh",
+                        "-c",
+                        "pip install -r requirements.txt -t /asset-output && cp -au . /asset-output",
+                    ],
                 ),
             ),
             runtime=lambda_.Runtime.PYTHON_3_9,
@@ -58,6 +59,9 @@ class AppStack(Stack):
             ),
             deploy_options=apigateway.StageOptions(
                 stage_name=config.ENV,
+                # Throttle the unauthenticated public endpoint to limit abuse.
+                throttling_rate_limit=20,
+                throttling_burst_limit=40,
             ),
             rest_api_name=f"{construct_id}-restapi",
             binary_media_types=["*/*"],
